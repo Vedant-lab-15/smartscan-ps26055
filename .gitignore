@@ -1,0 +1,42 @@
+# Real TSRD dataset files — never commit, too large and gated
+data/tsrd_sample/
+data/train/
+data/validation/
+data/test/
+data/scan/
+data/stare/
+data/archive/
+# Keep the placeholder
+!data/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Testing / coverage
+.pytest_cache/
+.hypothesis/
+.coverage
+htmlcov/
+
+# HuggingFace cache
+~/.cache/huggingface/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Secrets — never commit
+.env
+*.env
