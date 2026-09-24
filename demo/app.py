@@ -1,562 +1,464 @@
 """
-EW Smart Scan Strategy — Live Demo Dashboard
-SIH 2026 · PS 26055 (DRDO) · Alan Turing Institute / Dstl dataset
+Smart Scan Strategy — PS 26055 · SIH 2026 (DRDO)
+Whittle-inspired priority scheduler for EW spectrum scanning
+Coding Saints, Team ID 120303
 
-Two tabs:
-  Tab 1: Main scheduler — WIQL-UCB vs Round-Robin on 8 frequency bands
-  Tab 2: Periodic interception — Module C catching a periodic radar emitter
-
-Run:  streamlit run demo/app.py
+Run locally:  streamlit run demo/app.py
+Deployed at:  https://huggingface.co/spaces/Vedant-lab-15/smartscan-demo
 """
+from __future__ import annotations
+
 import sys
-import os
-import pathlib
-import time
 import math
+import pathlib
 
 import numpy as np
 import streamlit as st
 
-# ── ensure project root is importable ────────────────────────────────────────
+# ── ensure project root on path (works locally and on HF Spaces) ─────────────
 _ROOT = pathlib.Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from src.environment.pdw_generator import PDWGenerator, PeriodicBandConfig
-from src.environment.simulator import RFEnvironment
-from src.scheduler.belief import BeliefTracker
-from src.environment.receiver import ReceiverModel
-from src.scheduler.wiql_ucb import WIQLScheduler, ACTION_SCAN, ACTION_PASSIVE
-from src.scheduler.periodic import PeriodicInterceptModule
+from src.evaluation.env_generator import (
+    RenewalEnv,
+    make_background_scenario,
+    make_periodic_scenario,
+    make_freq_agile_scenario,
+    TSRD_PERIODIC_CLASSES,
+)
+from src.evaluation.runner import WIQLPolicy, run_episode, policy_round_robin
 
-# ── page config ──────────────────────────────────────────────────────────────
+# ── page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="EW Smart Scan — SIH 2026",
+    page_title="Smart Scan Strategy — PS 26055",
     page_icon="📡",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
-# ── dark-theme CSS ────────────────────────────────────────────────────────────
+# ── CSS ───────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-body, .stApp { background: #0d1117; color: #e6edf3; }
-.metric-box {
-    background: #161b22; border-radius: 8px; padding: 12px 18px;
-    margin: 4px; text-align: center;
+.block-container { padding-top: 1.5rem; }
+.metric-card {
+    background: #161b22; border-radius: 10px; padding: 16px 20px;
+    text-align: center; border: 1px solid #30363d;
 }
-.metric-label { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
-.metric-value { font-size: 2rem; font-weight: 700; color: #58a6ff; }
-.metric-value.green { color: #3fb950; }
-.metric-value.orange { color: #f0883e; }
-.metric-value.red   { color: #f85149; }
-.caught-flash {
-    background: #388bfd33; border: 2px solid #388bfd;
-    border-radius: 8px; padding: 10px; text-align: center;
-    font-size: 1.4rem; font-weight: 800; color: #79c0ff;
-    animation: pulse 0.5s ease-in-out;
-}
-@keyframes pulse { 0%{opacity:0.3} 50%{opacity:1} 100%{opacity:0.3} }
-.band-cell {
-    display: inline-block; width: 56px; height: 56px; margin: 3px;
-    border-radius: 8px; text-align: center; line-height: 56px;
-    font-size: 0.7rem; font-weight: 600; color: #fff;
-    border: 2px solid transparent; transition: all 0.2s;
-}
-.band-scanning { border: 3px solid #f0f0f0 !important; box-shadow: 0 0 14px #ffffffaa; }
-.legend-dot {
-    display: inline-block; width: 14px; height: 14px;
-    border-radius: 50%; margin-right: 6px; vertical-align: middle;
-}
+.metric-label { font-size: 0.72rem; color: #8b949e; text-transform: uppercase;
+                letter-spacing: 1px; margin-bottom: 4px; }
+.metric-value { font-size: 1.9rem; font-weight: 700; }
+.green  { color: #3fb950; }
+.blue   { color: #58a6ff; }
+.orange { color: #f0883e; }
+.red    { color: #f85149; }
+.delta-pos { color: #3fb950; font-size: 1rem; font-weight: 600; }
+.delta-neg { color: #f85149; font-size: 1rem; font-weight: 600; }
+.section-rule { border: none; border-top: 1px solid #30363d; margin: 1.2rem 0; }
 </style>
 """, unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Helpers
-# ─────────────────────────────────────────────────────────────────────────────
+# ── header ────────────────────────────────────────────────────────────────────
+st.markdown("# 📡 Smart Scan Strategy — PS 26055")
+st.caption(
+    "Whittle-inspired priority scheduler for EW spectrum scanning · "
+    "Coding Saints (ID 120303) · SIH 2026 DRDO"
+)
+st.markdown('<hr class="section-rule">', unsafe_allow_html=True)
 
-def belief_to_color(b: float) -> str:
-    """Map belief P(occupied) ∈ [0,1] to a hex color (blue→red gradient)."""
-    b = max(0.0, min(1.0, b))
-    r = int(20  + b * 200)
-    g = int(100 - b * 90)
-    bl = int(200 - b * 160)
-    return f"rgb({r},{g},{bl})"
+# ── sidebar ───────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("## ⚙️ Simulation Settings")
 
-
-def make_band_html(beliefs: np.ndarray, scanning: set[int],
-                   occupied: dict[int, bool] | None = None,
-                   band_labels: list[str] | None = None) -> str:
-    n = len(beliefs)
-    cells = []
-    for i in range(n):
-        bg    = belief_to_color(beliefs[i])
-        label = band_labels[i] if band_labels else f"B{i}"
-        scanning_cls = " band-scanning" if i in scanning else ""
-        indicator = ""
-        if occupied and occupied.get(i):
-            indicator = "●"
-        cells.append(
-            f'<div class="band-cell{scanning_cls}" style="background:{bg};">'
-            f'{label}<br><span style="font-size:1rem">{indicator}</span></div>'
-        )
-    return '<div style="display:flex;flex-wrap:wrap;gap:2px;">' + "".join(cells) + "</div>"
-
-
-def build_synth_env(n_bands: int, k_scan: int, seed: int,
-                    p_emit_hot: float = 0.75, p_emit_cold: float = 0.10,
-                    n_hot: int = 3):
-    """Build a synthetic environment with n_hot hot bands and the rest cold."""
-    band_cf = [900.0 + i * 100.0 for i in range(n_bands)]
-    band_edges = [(900.0 + i * 100.0, 1000.0 + i * 100.0) for i in range(n_bands)]
-    p_emit = [p_emit_hot if i < n_hot else p_emit_cold for i in range(n_bands)]
-    gen = PDWGenerator(n_bands=n_bands, band_cf_mhz=band_cf, dt_us=10.0,
-                       p_emit=p_emit, seed=seed)
-    env = RFEnvironment(source=gen, n_bands=n_bands,
-                        band_edges_mhz=band_edges, dt_us=10.0)
-    env.initialize()
-    return env, gen
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Tab 1 state
-# ─────────────────────────────────────────────────────────────────────────────
-
-def init_tab1(n_bands, k_scan, seed):
-    """Initialise / reset the Tab 1 simulation state."""
-    env, _ = build_synth_env(n_bands, k_scan, seed)
-
-    def _make_receiver(env_):
-        bt = BeliefTracker(n_bands=n_bands, p_stay_occ=0.9, p_stay_idle=0.85)
-        rec = ReceiverModel(rf_env=env_, belief_tracker=bt,
-                             n_bands=n_bands, k_scan=k_scan)
-        rec.reset()
-        return rec, bt
-
-    env_w, _ = build_synth_env(n_bands, k_scan, seed)
-    rec_w, bt_w = _make_receiver(env_w)
-    sched_w = WIQLScheduler(n_bands=n_bands, k_scan=k_scan)
-
-    env_r, _ = build_synth_env(n_bands, k_scan, seed)
-    rec_r, bt_r = _make_receiver(env_r)
-    rr_cursor = [0]
-
-    return dict(
-        step=0,
-        env_w=env_w, rec_w=rec_w, bt_w=bt_w, sched_w=sched_w,
-        env_r=env_r, rec_r=rec_r, bt_r=bt_r, rr_cursor=rr_cursor,
-        rewards_w=[], rewards_r=[],
-        action_w=set(), action_r=set(),
-        true_occ={},
+    scenario = st.selectbox(
+        "Scenario",
+        ["Background (random occupancy)", "Periodic (radar emitter)", "Frequency-Agile (hopping)"],
+        index=0,
+        help="Background: random emitters. Periodic: TSRD-grounded radar PRI. Freq-Agile: hopping emitter.",
     )
 
+    n_bands = st.slider("Frequency bands (N)", min_value=4, max_value=16, value=8, step=2)
+    k_scan  = st.slider("Simultaneous scans (K)", min_value=1, max_value=4, value=3)
+    t_steps = st.slider("Time steps", min_value=200, max_value=2000, value=500, step=100)
+    seed    = st.slider("Random seed", min_value=0, max_value=99, value=42)
 
-def step_tab1(state, n_bands, k_scan):
-    """Advance one time step for both WIQL and RR."""
-    t = state["step"]
+    st.markdown("---")
+    run_clicked = st.button("▶ Run Episode", type="primary", use_container_width=True)
 
-    b_prev_w = state["rec_w"].get_belief().copy()
-    action_w = state["sched_w"].select_arms(b_prev_w)
-    obs_w, rew_w, _ = state["rec_w"].step(action_w)
-    b_next_w = state["rec_w"].get_belief()
-    for b in action_w:
-        obs = 1 if len(obs_w[b]) > 0 else 0
-        state["sched_w"].update(b, ACTION_SCAN, float(obs),
-                                float(b_prev_w[b]), float(b_next_w[b]))
-    for b in range(n_bands):
-        if b not in action_w:
-            state["sched_w"].update(b, ACTION_PASSIVE, 0.0,
-                                    float(b_prev_w[b]), float(b_next_w[b]))
-    state["rewards_w"].append(rew_w)
-    state["action_w"] = action_w
-
-    c = state["rr_cursor"][0]
-    action_r = {(c + j) % n_bands for j in range(k_scan)}
-    state["rr_cursor"][0] = (c + 1) % n_bands
-    _, rew_r, _ = state["rec_r"].step(action_r)
-    state["rewards_r"].append(rew_r)
-    state["action_r"] = action_r
-
-    state["true_occ"] = state["env_w"].get_true_state(t)
-    state["step"] += 1
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Tab 2 state
-# ─────────────────────────────────────────────────────────────────────────────
-
-def init_tab2(T_us: float, sigma_us: float, seed: int):
-    """Initialise Module C demo."""
-    n_bands, k_scan = 4, 2
-    periodic_band = 0
-    dt_us = 50.0
-
-    band_cf = [900.0 + i * 100.0 for i in range(n_bands)]
-    band_edges = [(900.0 + i * 100.0, 1000.0 + i * 100.0) for i in range(n_bands)]
-    gen = PDWGenerator(
-        n_bands=n_bands, band_cf_mhz=band_cf, dt_us=dt_us,
-        p_emit=[0.1] * n_bands, seed=seed,
-        periodic_config={
-            periodic_band: PeriodicBandConfig(period_us=T_us, sigma_us=sigma_us,
-                                              t_start_us=T_us)
-        },
-    )
-    env = RFEnvironment(source=gen, n_bands=n_bands,
-                        band_edges_mhz=band_edges, dt_us=dt_us)
-    env.initialize()
-
-    bt = BeliefTracker(n_bands=n_bands, p_stay_occ=0.9, p_stay_idle=0.85)
-    rec = ReceiverModel(rf_env=env, belief_tracker=bt,
-                         n_bands=n_bands, k_scan=k_scan)
-    rec.reset()
-    module = PeriodicInterceptModule(n_bands=n_bands)
-
-    return dict(
-        step=0, env=env, rec=rec, bt=bt, module=module,
-        n_bands=n_bands, k_scan=k_scan, periodic_band=periodic_band,
-        dt_us=dt_us, T_us=T_us, sigma_us=sigma_us,
-        intercept_count=0, emission_count=0,
-        cyclic_errors=[],
-        caught_this_step=False,
-        timeline_t=[], timeline_true=[], timeline_scanned=[],
-        timeline_predicted=[], timeline_dwell_lo=[], timeline_dwell_hi=[],
-        timeline_caught=[],
-    )
-
-
-def step_tab2(state):
-    """Advance one step of the periodic interception demo."""
-    t = state["step"]
-    t_now_us = t * state["dt_us"]
-    pb = state["periodic_band"]
-    k = state["k_scan"]
-    n = state["n_bands"]
-    T = state["T_us"]
-
-    periodic_idx = state["module"].compute_all_indices(t_now_us)
-    in_dwell = periodic_idx[pb] > 0.4
-
-    if in_dwell:
-        action = {pb}
-        others = [b for b in range(n) if b != pb]
-        for j in range(k - 1):
-            action.add(others[j % len(others)])
-    else:
-        cursor = (t * k) % n
-        action = {(cursor + j) % n for j in range(k)}
-
-    obs_dict, _, _ = state["rec"].step(action)
-    true_state = state["env"].get_true_state(t)
-
-    for b in action:
-        for pulse in obs_dict[b]:
-            state["module"].ingest_pulse(b, pulse.toa_us)
-
-    caught = False
-    predicted = state["module"].predict_next_arrival(pb)
-    mu, sigma = state["module"].estimate_period(pb)
-
-    true_pulse_toa = None
-    if true_state.get(pb, False):
-        state["emission_count"] += 1
-        if pb in action and obs_dict[pb]:
-            state["intercept_count"] += 1
-            true_pulse_toa = obs_dict[pb][0].toa_us
-            caught = True
-            if predicted is not None:
-                raw_e = abs(true_pulse_toa - predicted)
-                cyc_e = min(raw_e, abs(T - raw_e))
-                state["cyclic_errors"].append(cyc_e)
-
-    state["caught_this_step"] = caught
-
-    state["timeline_t"].append(t_now_us)
-    state["timeline_true"].append(true_pulse_toa)
-    state["timeline_scanned"].append(pb in action)
-    state["timeline_predicted"].append(predicted)
-
-    if mu is not None and sigma is not None:
-        t_last = state["module"]._estimators[pb].t_last
-        t_exp = (t_last + mu) if t_last is not None else None
-        half = 3 * sigma
-        state["timeline_dwell_lo"].append((t_exp - half) if t_exp else None)
-        state["timeline_dwell_hi"].append((t_exp + half) if t_exp else None)
-    else:
-        state["timeline_dwell_lo"].append(None)
-        state["timeline_dwell_hi"].append(None)
-
-    state["timeline_caught"].append(caught)
-
-    for key in ["timeline_t", "timeline_true", "timeline_scanned",
-                "timeline_predicted", "timeline_dwell_lo",
-                "timeline_dwell_hi", "timeline_caught"]:
-        if len(state[key]) > 80:
-            state[key] = state[key][-80:]
-
-    state["step"] += 1
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Main app
-# ─────────────────────────────────────────────────────────────────────────────
-
-tab1, tab2 = st.tabs(["📡  Main Scheduler — Learning vs Blind Sweep",
-                       "🎯  Periodic Intercept — Predicting the Radar"])
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TAB 1
-# ═══════════════════════════════════════════════════════════════════════════════
-with tab1:
-    st.markdown("## 📡 Frequency Band Scheduling")
+    st.markdown("---")
+    st.markdown("### About")
     st.markdown(
-        "**WIQL-UCB** learns *which* bands are most active and focuses scanning there. "
-        "**Round-Robin** sweeps bands blindly. Watch the band colours and scan choices diverge."
+        "The **WIQL-UCB scheduler** maintains a per-band belief state "
+        "and computes a priority index:\n\n"
+        "> `I_i = W_i·b_i + γ·bonus_i + UCB_i`\n\n"
+        "It focuses on active bands while round-robin sweeps blindly."
+    )
+    st.markdown(
+        "**Code & paper:** [github.com/Vedant-lab-15/smartscan-ps26055]"
+        "(https://github.com/Vedant-lab-15/smartscan-ps26055)"
     )
 
-    c1, c2, c3, c4 = st.columns([2, 2, 2, 2])
-    with c1:
-        n_bands = st.selectbox("Number of bands", [8, 12, 18], index=0, key="t1_bands")
-        k_scan  = st.selectbox("Simultaneous scans (K)", [2, 3, 4], index=1, key="t1_k")
-    with c2:
-        seed_t1 = st.slider("Random seed", 0, 99, 42, key="t1_seed")
-        speed   = st.slider("Speed (steps/sec)", 1, 20, 4, key="t1_speed")
-    with c3:
-        running = st.toggle("▶ Play", key="t1_run")
-    with c4:
-        if st.button("↺ Reset", key="t1_reset"):
-            for k in list(st.session_state.keys()):
-                if k.startswith("t1_state"):
-                    del st.session_state[k]
-            st.rerun()
+# ── helpers ───────────────────────────────────────────────────────────────────
 
-    state_key = f"t1_state_{n_bands}_{k_scan}_{seed_t1}"
-    if state_key not in st.session_state:
-        st.session_state[state_key] = init_tab1(n_bands, k_scan, seed_t1)
-    s = st.session_state[state_key]
+def run_full_episode(scenario_name: str, n_bands: int, k_scan: int,
+                     t_steps: int, seed: int) -> dict:
+    """Run one full episode, returning per-step logs for both schedulers."""
+    rng = np.random.default_rng(seed)
+    DT_PERIODIC = 100.0
+    DT_DEFAULT  = 1_000.0
 
-    col_w, col_r = st.columns(2)
+    if scenario_name.startswith("Background"):
+        emitters = make_background_scenario(rng, n_bands)
+        dt_us = DT_DEFAULT
+    elif scenario_name.startswith("Periodic"):
+        emitters = make_periodic_scenario(rng, n_bands, dt_us=DT_PERIODIC)
+        dt_us = DT_PERIODIC
+    else:
+        emitters = make_freq_agile_scenario(rng, n_bands)
+        dt_us = DT_DEFAULT
 
+    # ── WIQL-UCB episode ──────────────────────────────────────────────────────
+    env_w = RenewalEnv(n_bands=n_bands, dt_us=dt_us, episode_len=t_steps,
+                       k_scan=k_scan, seed=seed)
+    env_w.set_emitters(emitters)
+
+    policy_w = WIQLPolicy(n_bands=n_bands, k=k_scan, use_periodic_bias=True)
+    policy_w.reset()
+
+    wiql_rewards: list[float] = []
+    wiql_intercepts: list[int] = []
+    wiql_occupied: list[int] = []
+    wiql_actions: list[set] = []
+    wiql_beliefs: list[np.ndarray] = []  # per step, all bands
+    wiql_indices: list[np.ndarray] = []  # per step, all bands
+    occ_grid: list[list[bool]] = []      # [step][band]
+
+    env_w.reset()
+    for t in range(t_steps):
+        action = policy_w.select(t, dt_us)
+        obs    = env_w.step(action)
+        policy_w.update(t, action, obs, dt_us)
+
+        slot_int = 0; slot_occ = 0; slot_rew = 0.0
+        occ_row = []
+        for b in range(n_bands):
+            ta = obs[b]["true_active"]; sc = obs[b]["scanned"]; de = obs[b]["detected"]
+            occ_row.append(ta)
+            if ta: slot_occ += 1
+            if ta and sc and de:
+                slot_int += 1; slot_rew += 1.0
+            elif sc and de and not ta:
+                slot_rew -= 0.1
+
+        wiql_rewards.append(slot_rew / max(k_scan, 1))
+        wiql_intercepts.append(slot_int)
+        wiql_occupied.append(slot_occ)
+        wiql_actions.append(action)
+        wiql_beliefs.append(policy_w.bt.get_all().copy())
+        # Compute current index vector (may have inf for unvisited)
+        raw_idx = policy_w.sched.compute_indices(policy_w.bt.get_all())
+        finite_idx = np.where(np.isinf(raw_idx), 5.0, raw_idx)
+        wiql_indices.append(finite_idx.copy())
+        occ_grid.append(occ_row)
+
+    # ── Round-Robin episode (same emitters, same seed) ─────────────────────
+    env_r = RenewalEnv(n_bands=n_bands, dt_us=dt_us, episode_len=t_steps,
+                       k_scan=k_scan, seed=seed)
+    env_r.set_emitters(emitters)
+    env_r.reset()
+
+    rr_rewards: list[float] = []
+    rr_intercepts: list[int] = []
+    rr_occupied: list[int] = []
+
+    for t in range(t_steps):
+        action = policy_round_robin(t, n_bands, k_scan)
+        obs    = env_r.step(action)
+
+        slot_int = 0; slot_occ = 0; slot_rew = 0.0
+        for b in range(n_bands):
+            ta = obs[b]["true_active"]; sc = obs[b]["scanned"]; de = obs[b]["detected"]
+            if ta: slot_occ += 1
+            if ta and sc and de:
+                slot_int += 1; slot_rew += 1.0
+            elif sc and de and not ta:
+                slot_rew -= 0.1
+
+        rr_rewards.append(slot_rew / max(k_scan, 1))
+        rr_intercepts.append(slot_int)
+        rr_occupied.append(slot_occ)
+
+    # ── Aggregate ─────────────────────────────────────────────────────────────
+    total_occ_w = max(sum(wiql_occupied), 1)
+    total_occ_r = max(sum(rr_occupied),   1)
+
+    return {
+        "wiql_rate":  sum(wiql_intercepts) / total_occ_w,
+        "rr_rate":    sum(rr_intercepts)   / total_occ_r,
+        "wiql_rewards":     wiql_rewards,
+        "rr_rewards":       rr_rewards,
+        "wiql_intercepts":  wiql_intercepts,
+        "rr_intercepts":    rr_intercepts,
+        "wiql_occupied":    wiql_occupied,
+        "wiql_actions":     wiql_actions,
+        "wiql_beliefs":     wiql_beliefs,   # list[np.ndarray(n_bands)]
+        "wiql_indices":     wiql_indices,   # list[np.ndarray(n_bands)]
+        "occ_grid":         occ_grid,       # list[list[bool]]
+        "n_bands":          n_bands,
+        "k_scan":           k_scan,
+        "t_steps":          t_steps,
+        "scenario":         scenario_name,
+    }
+
+
+def cumulative_intercept_rate(intercepts: list[int], occupied: list[int]) -> list[float]:
+    """Running intercept rate: cum_int / max(cum_occ, 1) at each step."""
+    rates = []
+    ci = 0; co = 0
+    for i, o in zip(intercepts, occupied):
+        ci += i; co += o
+        rates.append(ci / max(co, 1))
+    return rates
+
+
+# ── main panel ────────────────────────────────────────────────────────────────
+
+if not run_clicked:
+    st.info(
+        "Configure the scenario in the sidebar, then press **▶ Run Episode** to simulate. "
+        "Results appear instantly — no waiting for a live loop."
+    )
     st.markdown("""
-    <div style="margin:8px 0 12px 0">
-    <span class="legend-dot" style="background:#1450c8"></span>P(active)=Low — free band &nbsp;&nbsp;
-    <span class="legend-dot" style="background:#c85014"></span>P(active)=High — likely active &nbsp;&nbsp;
-    <span class="legend-dot" style="background:rgba(0,0,0,0);border:3px solid #fff;display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:6px;vertical-align:middle"></span>Scanning now &nbsp;&nbsp;
-    ● Active this step (ground truth)
-    </div>
-    """, unsafe_allow_html=True)
+    **What this demo shows:**
+    - 📊 **Band occupancy heatmap** — which bands are active at each step (ground truth)
+    - 🔵 **Scan overlay** — which bands WIQL-UCB chose to scan vs round-robin
+    - 📈 **Belief state** — the scheduler's per-band probability estimate P(occupied)
+    - 🎯 **Priority index** — the combined Whittle + UCB score driving scan decisions
+    - 🏆 **Intercept counter** — WIQL-UCB vs round-robin head-to-head
+    - 📉 **Cumulative intercept rate** — who pulls ahead over time
+    """)
+else:
+    with st.spinner("Running episode..."):
+        results = run_full_episode(scenario, n_bands, k_scan, t_steps, seed)
 
-    beliefs_w = s["rec_w"].get_belief()
-    beliefs_r = s["rec_r"].get_belief()
+    n  = results["n_bands"]
+    T  = results["t_steps"]
+    wr = results["wiql_rate"]
+    rr = results["rr_rate"]
+    delta = wr - rr
 
-    with col_w:
-        st.markdown("### 🔵 WIQL-UCB  *(Learns from experience)*")
-        st.markdown(make_band_html(beliefs_w, s["action_w"], s["true_occ"]),
-                    unsafe_allow_html=True)
-        avg_w = np.mean(s["rewards_w"]) if s["rewards_w"] else 0.0
-        st.markdown(f"""
-        <div class="metric-box">
-        <div class="metric-label">Avg Reward / Step</div>
-        <div class="metric-value green">{avg_w:.3f}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col_r:
-        st.markdown("### ⚪ Round-Robin  *(Sweeps blindly)*")
-        st.markdown(make_band_html(beliefs_r, s["action_r"], s["true_occ"]),
-                    unsafe_allow_html=True)
-        avg_r = np.mean(s["rewards_r"]) if s["rewards_r"] else 0.0
-        st.markdown(f"""
-        <div class="metric-box">
-        <div class="metric-label">Avg Reward / Step</div>
-        <div class="metric-value orange">{avg_r:.3f}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown(f"**Step {s['step']}** &nbsp;|&nbsp; "
-                f"WIQL advantage: **{avg_w - avg_r:+.4f}** reward/step", unsafe_allow_html=True)
-
-    if len(s["rewards_w"]) > 1:
-        import pandas as pd
-        chart_data = pd.DataFrame({
-            "WIQL-UCB": pd.Series(s["rewards_w"]).rolling(20, min_periods=1).mean(),
-            "Round-Robin": pd.Series(s["rewards_r"]).rolling(20, min_periods=1).mean(),
-        })
-        st.line_chart(chart_data, use_container_width=True, height=200,
-                      color=["#3fb950", "#8b949e"])
-        st.caption("Reward per step (20-step rolling average) — higher is better")
-
-    if running:
-        step_tab1(s, n_bands, k_scan)
-        time.sleep(1.0 / max(speed, 1))
-        st.rerun()
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TAB 2
-# ═══════════════════════════════════════════════════════════════════════════════
-with tab2:
-    st.markdown("## 🎯 Catching a Periodic Radar Signal")
-    st.markdown(
-        "The system learns the radar's **pulse repetition interval** (PRI) "
-        "and opens a precise scan window at the predicted arrival time — "
-        "instead of checking randomly. Watch it go from guessing to predicting."
-    )
-
-    cc1, cc2, cc3, cc4 = st.columns([2, 2, 2, 2])
-    with cc1:
-        T_us_    = st.selectbox("Radar period T (μs)", [300, 500, 750, 1000], index=1, key="t2_T") * 1.0
-        sigma_us_ = st.selectbox("Timing jitter σ (μs)", [5, 10, 20, 50], index=2, key="t2_sig") * 1.0
-    with cc2:
-        seed_t2 = st.slider("Seed", 0, 99, 42, key="t2_seed")
-        speed2  = st.slider("Speed (steps/sec)", 1, 20, 5, key="t2_speed")
-    with cc3:
-        running2 = st.toggle("▶ Play", key="t2_run")
-    with cc4:
-        if st.button("↺ Reset", key="t2_reset"):
-            for k in list(st.session_state.keys()):
-                if k.startswith("t2_state"):
-                    del st.session_state[k]
-            st.rerun()
-
-    state2_key = f"t2_state_{T_us_}_{sigma_us_}_{seed_t2}"
-    if state2_key not in st.session_state:
-        st.session_state[state2_key] = init_tab2(T_us_, sigma_us_, seed_t2)
-    s2 = st.session_state[state2_key]
-
-    if s2["caught_this_step"]:
-        st.markdown('<div class="caught-flash">🎯 CAUGHT!</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div style="height:52px"></div>', unsafe_allow_html=True)
-
+    # ── Headline metrics ──────────────────────────────────────────────────────
+    st.markdown("### 📊 Episode Results")
     m1, m2, m3, m4 = st.columns(4)
-    mu_val, sig_val = s2["module"].estimate_period(s2["periodic_band"])
-    mu_str  = f"{mu_val:.1f} μs"  if mu_val  is not None else "Learning..."
-    sig_str = f"{sig_val:.1f} μs" if sig_val is not None else "Learning..."
-    rate = s2["intercept_count"] / max(s2["emission_count"], 1)
-    err  = float(np.mean(s2["cyclic_errors"])) if s2["cyclic_errors"] else float("nan")
-    err_str = f"{err:.1f} μs" if not math.isnan(err) else "—"
 
     with m1:
         st.markdown(f"""
-        <div class="metric-box">
-        <div class="metric-label">Estimated Period</div>
-        <div class="metric-value" style="font-size:1.4rem">{mu_str}</div>
-        <div class="metric-label">true: {T_us_:.0f} μs</div>
+        <div class="metric-card">
+          <div class="metric-label">WIQL-UCB Intercept Rate</div>
+          <div class="metric-value green">{wr:.3f}</div>
         </div>""", unsafe_allow_html=True)
+
     with m2:
         st.markdown(f"""
-        <div class="metric-box">
-        <div class="metric-label">Estimated Jitter σ</div>
-        <div class="metric-value" style="font-size:1.4rem">{sig_str}</div>
-        <div class="metric-label">true: {sigma_us_:.0f} μs</div>
+        <div class="metric-card">
+          <div class="metric-label">Round-Robin Intercept Rate</div>
+          <div class="metric-value orange">{rr:.3f}</div>
         </div>""", unsafe_allow_html=True)
+
     with m3:
+        cls   = "delta-pos" if delta >= 0 else "delta-neg"
+        arrow = "▲" if delta >= 0 else "▼"
         st.markdown(f"""
-        <div class="metric-box">
-        <div class="metric-label">Intercept Rate</div>
-        <div class="metric-value green">{rate:.0%}</div>
-        <div class="metric-label">{s2['intercept_count']}/{s2['emission_count']}</div>
+        <div class="metric-card">
+          <div class="metric-label">WIQL Advantage</div>
+          <div class="metric-value {cls}">{arrow} {abs(delta):.3f}</div>
         </div>""", unsafe_allow_html=True)
+
     with m4:
         st.markdown(f"""
-        <div class="metric-box">
-        <div class="metric-label">Timing Error</div>
-        <div class="metric-value orange">{err_str}</div>
-        <div class="metric-label">converges → ~{sigma_us_:.0f} μs</div>
+        <div class="metric-card">
+          <div class="metric-label">Scenario / Bands / K</div>
+          <div class="metric-value blue" style="font-size:1.1rem">
+            {scenario.split('(')[0].strip()}<br>{n} bands · K={k_scan}
+          </div>
         </div>""", unsafe_allow_html=True)
 
-    if len(s2["timeline_t"]) > 2:
-        import pandas as pd
-        import plotly.graph_objects as go
+    st.markdown('<hr class="section-rule">', unsafe_allow_html=True)
 
-        ts   = s2["timeline_t"]
-        n_ts = len(ts)
+    # ── Cumulative intercept rate chart ───────────────────────────────────────
+    st.markdown("### 📈 Cumulative Intercept Rate — WIQL-UCB vs Round-Robin")
 
-        fig = go.Figure()
-        fig.update_layout(
-            paper_bgcolor="#0d1117", plot_bgcolor="#161b22",
-            font=dict(color="#e6edf3", size=12),
-            height=280, margin=dict(l=40, r=20, t=30, b=30),
-            showlegend=True, legend=dict(
-                orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
-                font=dict(size=11),
-            ),
-            xaxis=dict(title="Time (μs)", gridcolor="#21262d",
-                       color="#8b949e", tickformat=".0f"),
-            yaxis=dict(visible=False),
+    import pandas as pd
+
+    wiql_cum = cumulative_intercept_rate(results["wiql_intercepts"], results["wiql_occupied"])
+    rr_cum   = cumulative_intercept_rate(results["rr_intercepts"],   results["wiql_occupied"])
+
+    # Downsample to 200 points max for clean rendering
+    step_every = max(1, T // 200)
+    xs = list(range(0, T, step_every))
+    chart_df = pd.DataFrame({
+        "Step": xs,
+        "WIQL-UCB": [wiql_cum[i] for i in xs],
+        "Round-Robin": [rr_cum[i]  for i in xs],
+    }).set_index("Step")
+
+    st.line_chart(chart_df, use_container_width=True, height=220,
+                  color=["#3fb950", "#8b949e"])
+    st.caption(
+        "Higher = better. WIQL-UCB focuses on active bands; "
+        "round-robin sweeps blindly regardless of occupancy."
+    )
+
+    st.markdown('<hr class="section-rule">', unsafe_allow_html=True)
+
+    # ── Band occupancy heatmap ────────────────────────────────────────────────
+    st.markdown("### 🗺️ Band Occupancy — Ground Truth + WIQL-UCB Scan Decisions")
+    col_heat, col_rr_heat = st.columns(2)
+
+    # Build heatmap arrays: rows=bands, cols=time (downsampled)
+    sample_steps = min(150, T)
+    step_every_h = max(1, T // sample_steps)
+    sampled = list(range(0, T, step_every_h))[:sample_steps]
+
+    # Occupancy: 1.0 = active, 0.0 = idle
+    occ_arr = np.array([[1.0 if results["occ_grid"][t][b] else 0.0
+                         for t in sampled] for b in range(n)])
+
+    # Scan overlay: 2.0 = scanned+active, 1.5 = scanned+idle, rest = occ_arr value
+    wiql_scan_arr = occ_arr.copy()
+    rr_scan_arr   = occ_arr.copy()
+    for ti, t in enumerate(sampled):
+        w_action = results["wiql_actions"][t]
+        r_action = {(t * k_scan + j) % n for j in range(k_scan)}
+        for b in range(n):
+            if b in w_action:
+                wiql_scan_arr[b, ti] = 2.0 if occ_arr[b, ti] > 0.5 else 1.5
+            if b in r_action:
+                rr_scan_arr[b, ti]   = 2.0 if occ_arr[b, ti] > 0.5 else 1.5
+
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import ListedColormap
+
+    cmap = ListedColormap(["#0d1117", "#21262d", "#f0883e", "#3fb950"])
+
+    def make_heatmap(arr, title):
+        fig, ax = plt.subplots(figsize=(7, max(2, n * 0.35)),
+                               facecolor="#0d1117")
+        ax.set_facecolor("#0d1117")
+        # Map: 0=idle, 0.5=(unused), 1.0→orange(active), 1.5→dim-blue(scanned-idle), 2.0→green(scanned-hit)
+        # Remap to 4 discrete levels: 0, 0.67, 1.33, 2.0
+        remapped = np.clip(arr, 0, 2.0)
+        ax.imshow(remapped, aspect="auto", cmap=cmap, vmin=0, vmax=2,
+                  interpolation="nearest")
+        ax.set_yticks(range(n))
+        ax.set_yticklabels([f"B{b}" for b in range(n)],
+                           color="#8b949e", fontsize=7)
+        ax.set_xticks([])
+        ax.set_title(title, color="#e6edf3", fontsize=9, pad=4)
+        for sp in ax.spines.values():
+            sp.set_visible(False)
+        fig.tight_layout(pad=0.4)
+        return fig
+
+    with col_heat:
+        fig_w = make_heatmap(wiql_scan_arr, "WIQL-UCB  (🟢 scanned+hit  🟠 active  ░ scanned-idle)")
+        st.pyplot(fig_w, use_container_width=True)
+        plt.close(fig_w)
+
+    with col_rr_heat:
+        fig_r = make_heatmap(rr_scan_arr, "Round-Robin  (🟢 scanned+hit  🟠 active  ░ scanned-idle)")
+        st.pyplot(fig_r, use_container_width=True)
+        plt.close(fig_r)
+
+    st.caption(
+        "Each row = one frequency band. Each column = one time step (downsampled). "
+        "WIQL-UCB concentrates scans on active bands; round-robin distributes evenly."
+    )
+
+    st.markdown('<hr class="section-rule">', unsafe_allow_html=True)
+
+    # ── Belief state and priority index at final step ─────────────────────────
+    st.markdown("### 🧠 Final Belief State & Priority Index (last step)")
+    col_belief, col_priority = st.columns(2)
+
+    final_belief = results["wiql_beliefs"][-1]
+    final_index  = results["wiql_indices"][-1]
+    band_labels  = [f"B{b}" for b in range(n)]
+
+    def bar_chart(values, labels, title, color):
+        fig, ax = plt.subplots(figsize=(max(4, n * 0.5), 2.8),
+                               facecolor="#0d1117")
+        ax.set_facecolor("#161b22")
+        bars = ax.bar(labels, values, color=color, alpha=0.85, width=0.6)
+        ax.set_ylim(0, max(float(np.max(values)) * 1.15, 0.1))
+        ax.tick_params(colors="#8b949e", labelsize=7)
+        ax.set_title(title, color="#e6edf3", fontsize=9, pad=4)
+        for sp in ax.spines.values():
+            sp.set_edgecolor("#30363d")
+        ax.yaxis.label.set_color("#8b949e")
+        fig.tight_layout(pad=0.5)
+        return fig
+
+    with col_belief:
+        fig_b = bar_chart(final_belief, band_labels,
+                          "Belief b_i = P(band occupied)", "#58a6ff")
+        st.pyplot(fig_b, use_container_width=True)
+        plt.close(fig_b)
+        st.caption("High belief → scheduler visits more often. Converges to true occupancy pattern.")
+
+    with col_priority:
+        fig_p = bar_chart(final_index, band_labels,
+                          "Priority index I_i = W·b + UCB", "#3fb950")
+        st.pyplot(fig_p, use_container_width=True)
+        plt.close(fig_p)
+        st.caption("Highest-priority bands are scanned next step. Combines belief, Whittle index, and UCB.")
+
+    st.markdown('<hr class="section-rule">', unsafe_allow_html=True)
+
+    # ── Rolling reward comparison ─────────────────────────────────────────────
+    st.markdown("### 🏆 Rolling Reward — WIQL-UCB vs Round-Robin (20-step window)")
+
+    import pandas as pd
+    w_roll = pd.Series(results["wiql_rewards"]).rolling(20, min_periods=1).mean()
+    r_roll = pd.Series(results["rr_rewards"]).rolling(20, min_periods=1).mean()
+
+    roll_df = pd.DataFrame({
+        "Step": list(range(T)),
+        "WIQL-UCB": w_roll.tolist(),
+        "Round-Robin": r_roll.tolist(),
+    }).set_index("Step")
+
+    # Downsample
+    roll_df = roll_df.iloc[::step_every]
+    st.line_chart(roll_df, use_container_width=True, height=200,
+                  color=["#3fb950", "#8b949e"])
+    st.caption("20-step rolling average reward per step. Positive spikes = successful intercepts.")
+
+    # ── Periodic emitter callout ──────────────────────────────────────────────
+    if scenario.startswith("Periodic"):
+        st.markdown('<hr class="section-rule">', unsafe_allow_html=True)
+        st.markdown("### 🎯 Periodic Emitter Info")
+        st.info(
+            f"Scenario uses TSRD-grounded periodic emitters:\n"
+            f"- **P1**: T = {TSRD_PERIODIC_CLASSES[0]['T_us']} μs, "
+            f"σ = {TSRD_PERIODIC_CLASSES[0]['sigma_T_us']} μs "
+            f"(CoV = {TSRD_PERIODIC_CLASSES[0]['sigma_T_us']/TSRD_PERIODIC_CLASSES[0]['T_us']*100:.1f}%)\n"
+            f"- **P2**: T = {TSRD_PERIODIC_CLASSES[1]['T_us']} μs, "
+            f"σ = {TSRD_PERIODIC_CLASSES[1]['sigma_T_us']} μs "
+            f"(CoV = {TSRD_PERIODIC_CLASSES[1]['sigma_T_us']/TSRD_PERIODIC_CLASSES[1]['T_us']*100:.1f}%)\n\n"
+            "The periodic module uses a Welford online estimator to learn the PRI from "
+            "observed inter-arrival times, then opens a targeted dwell window (±3σ) "
+            "around the predicted next arrival. Convergence: 30/30 seeds with 50-step "
+            "round-robin pre-phase (worst-case intercept rate 0.419)."
         )
 
-        dw_lo = s2["timeline_dwell_lo"]
-        dw_hi = s2["timeline_dwell_hi"]
-        valid_dw = [(i, ts[i], dw_lo[i], dw_hi[i])
-                    for i in range(n_ts)
-                    if dw_lo[i] is not None and dw_hi[i] is not None]
-        if valid_dw:
-            for idx, t_, lo_, hi_ in valid_dw[-1:]:
-                fig.add_vrect(
-                    x0=lo_, x1=hi_,
-                    fillcolor="#388bfd22", layer="below",
-                    line_width=0,
-                    annotation_text="Scan<br>window",
-                    annotation_font=dict(color="#79c0ff", size=10),
-                    annotation_position="top left",
-                )
-
-        preds = [(ts[i], s2["timeline_predicted"][i])
-                 for i in range(n_ts) if s2["timeline_predicted"][i] is not None]
-        if preds:
-            last_pred_t = preds[-1][1]
-            fig.add_vline(
-                x=last_pred_t, line_dash="dash",
-                line_color="#58a6ff", line_width=2,
-                annotation_text="Predicted<br>next signal",
-                annotation_font=dict(color="#58a6ff", size=10),
-                annotation_position="top right",
-            )
-
-        true_ticks = [(ts[i], s2["timeline_true"][i])
-                      for i in range(n_ts)
-                      if s2["timeline_true"][i] is not None]
-        if true_ticks:
-            fig.add_trace(go.Scatter(
-                x=[t[1] for t in true_ticks],
-                y=[0.5] * len(true_ticks),
-                mode="markers",
-                marker=dict(symbol="line-ns", size=20, color="#f0883e",
-                            line=dict(color="#f0883e", width=3)),
-                name="Radar pulse (ground truth)",
-                showlegend=True,
-            ))
-
-        caught_ticks = [(ts[i], s2["timeline_true"][i])
-                        for i in range(n_ts)
-                        if s2["timeline_caught"][i]
-                        and s2["timeline_true"][i] is not None]
-        if caught_ticks:
-            fig.add_trace(go.Scatter(
-                x=[t[1] for t in caught_ticks],
-                y=[0.5] * len(caught_ticks),
-                mode="markers",
-                marker=dict(symbol="star", size=16, color="#3fb950",
-                            line=dict(color="#3fb950", width=2)),
-                name="✓ CAUGHT",
-                showlegend=True,
-            ))
-
-        st.plotly_chart(fig, use_container_width=True)
-        st.caption(
-            "Orange ticks = radar pulses (ground truth) · "
-            "Blue dashed line = system's predicted next arrival · "
-            "Blue shading = scan window (±3σ) · "
-            "Green stars = successful intercepts"
-        )
-    else:
-        st.info("Press ▶ Play to start the simulation")
-
-    st.markdown(f"**Step {s2['step']}** — "
-                f"{'🎯 In dwell window — scanning!' if s2['caught_this_step'] else 'Observing...'}")
-
-    if running2:
-        step_tab2(s2)
-        time.sleep(1.0 / max(speed2, 1))
-        st.rerun()
+# ── footer ────────────────────────────────────────────────────────────────────
+st.markdown('<hr class="section-rule">', unsafe_allow_html=True)
+st.markdown(
+    "Full research paper, code, and methodology: "
+    "[github.com/Vedant-lab-15/smartscan-ps26055]"
+    "(https://github.com/Vedant-lab-15/smartscan-ps26055) · "
+    "SIH 2026 PS 26055 (DRDO) · MIT License"
+)
