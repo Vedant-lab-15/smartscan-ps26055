@@ -20,10 +20,10 @@ import sys
 
 import numpy as np
 
-from ew_smart_scan.env.belief_tracker import BeliefTracker
-from ew_smart_scan.env.receiver_model import ReceiverModel
-from ew_smart_scan.env.rf_environment import RFEnvironment
-from ew_smart_scan.models.pdw_generator import PDWGenerator
+from src.scheduler.belief import BeliefTracker
+from src.environment.receiver import ReceiverModel
+from src.environment.simulator import RFEnvironment
+from src.environment.pdw_generator import PDWGenerator
 
 
 def run(n_steps: int = 200, n_bands: int = 8, k_scan: int = 3, seed: int = 42) -> dict:

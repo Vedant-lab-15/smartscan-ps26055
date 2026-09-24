@@ -1,0 +1,666 @@
+============================================================
+  PS 26055 Statistical Harness — FULL RUN
+  Seeds=30  T=5000  K=3  bands=8
+  TSRD: statistics source only — not the environment
+  Periodic params: 2 characterised instances (thin basis, noted)
+============================================================
+
+[Test 1] Core Scheduler vs Baselines
+
+  Scenario: background | seeds=30 T=5000 dt=1000μs
+    seed= 0  round_robin             rate=0.269  reward=0.171
+    seed= 0  random                  rate=0.273  reward=0.174
+    seed= 0  wiql_ucb                rate=0.277  reward=0.176
+    seed= 0  wiql_ucb_no_bias        rate=0.364  reward=0.232
+    seed= 1  round_robin             rate=0.257  reward=0.187
+    seed= 1  random                  rate=0.247  reward=0.180
+    seed= 1  wiql_ucb                rate=0.192  reward=0.140
+    seed= 1  wiql_ucb_no_bias        rate=0.489  reward=0.358
+    seed= 2  round_robin             rate=0.321  reward=0.175
+    seed= 2  random                  rate=0.326  reward=0.178
+    seed= 2  wiql_ucb                rate=0.409  reward=0.223
+    seed= 2  wiql_ucb_no_bias        rate=0.564  reward=0.308
+    seed= 3  round_robin             rate=0.328  reward=0.112
+    seed= 3  random                  rate=0.329  reward=0.113
+    seed= 3  wiql_ucb                rate=0.526  reward=0.180
+    seed= 3  wiql_ucb_no_bias        rate=0.653  reward=0.224
+    seed= 4  round_robin             rate=0.257  reward=0.178
+    seed= 4  random                  rate=0.262  reward=0.182
+    seed= 4  wiql_ucb                rate=0.070  reward=0.048
+    seed= 4  wiql_ucb_no_bias        rate=0.363  reward=0.253
+    seed= 5  round_robin             rate=0.260  reward=0.117
+    seed= 5  random                  rate=0.265  reward=0.119
+    seed= 5  wiql_ucb                rate=0.462  reward=0.209
+    seed= 5  wiql_ucb_no_bias        rate=0.545  reward=0.247
+    seed= 6  round_robin             rate=0.216  reward=0.125
+    seed= 6  random                  rate=0.208  reward=0.121
+    seed= 6  wiql_ucb                rate=0.066  reward=0.038
+    seed= 6  wiql_ucb_no_bias        rate=0.355  reward=0.207
+    seed= 7  round_robin             rate=0.319  reward=0.153
+    seed= 7  random                  rate=0.316  reward=0.152
+    seed= 7  wiql_ucb                rate=0.088  reward=0.041
+    seed= 7  wiql_ucb_no_bias        rate=0.589  reward=0.283
+    seed= 8  round_robin             rate=0.311  reward=0.170
+    seed= 8  random                  rate=0.301  reward=0.165
+    seed= 8  wiql_ucb                rate=0.052  reward=0.028
+    seed= 8  wiql_ucb_no_bias        rate=0.613  reward=0.337
+    seed= 9  round_robin             rate=0.321  reward=0.165
+    seed= 9  random                  rate=0.321  reward=0.165
+    seed= 9  wiql_ucb                rate=0.130  reward=0.066
+    seed= 9  wiql_ucb_no_bias        rate=0.475  reward=0.244
+    seed=10  round_robin             rate=0.318  reward=0.173
+    seed=10  random                  rate=0.317  reward=0.173
+    seed=10  wiql_ucb                rate=0.224  reward=0.122
+    seed=10  wiql_ucb_no_bias        rate=0.447  reward=0.244
+    seed=11  round_robin             rate=0.295  reward=0.171
+    seed=11  random                  rate=0.289  reward=0.168
+    seed=11  wiql_ucb                rate=0.299  reward=0.173
+    seed=11  wiql_ucb_no_bias        rate=0.358  reward=0.208
+    seed=12  round_robin             rate=0.347  reward=0.150
+    seed=12  random                  rate=0.336  reward=0.146
+    seed=12  wiql_ucb                rate=0.603  reward=0.262
+    seed=12  wiql_ucb_no_bias        rate=0.563  reward=0.245
+    seed=13  round_robin             rate=0.234  reward=0.056
+    seed=13  random                  rate=0.239  reward=0.057
+    seed=13  wiql_ucb                rate=0.244  reward=0.058
+    seed=13  wiql_ucb_no_bias        rate=0.339  reward=0.081
+    seed=14  round_robin             rate=0.369  reward=0.166
+    seed=14  random                  rate=0.361  reward=0.162
+    seed=14  wiql_ucb                rate=0.166  reward=0.074
+    seed=14  wiql_ucb_no_bias        rate=0.435  reward=0.195
+    seed=15  round_robin             rate=0.342  reward=0.157
+    seed=15  random                  rate=0.340  reward=0.156
+    seed=15  wiql_ucb                rate=0.315  reward=0.145
+    seed=15  wiql_ucb_no_bias        rate=0.632  reward=0.291
+    seed=16  round_robin             rate=0.230  reward=0.096
+    seed=16  random                  rate=0.232  reward=0.097
+    seed=16  wiql_ucb                rate=0.104  reward=0.043
+    seed=16  wiql_ucb_no_bias        rate=0.215  reward=0.090
+    seed=17  round_robin             rate=0.359  reward=0.132
+    seed=17  random                  rate=0.363  reward=0.133
+    seed=17  wiql_ucb                rate=0.683  reward=0.252
+    seed=17  wiql_ucb_no_bias        rate=0.796  reward=0.293
+    seed=18  round_robin             rate=0.373  reward=0.124
+    seed=18  random                  rate=0.370  reward=0.123
+    seed=18  wiql_ucb                rate=0.249  reward=0.083
+    seed=18  wiql_ucb_no_bias        rate=0.427  reward=0.143
+    seed=19  round_robin             rate=0.331  reward=0.200
+    seed=19  random                  rate=0.334  reward=0.202
+    seed=19  wiql_ucb                rate=0.009  reward=0.004
+    seed=19  wiql_ucb_no_bias        rate=0.526  reward=0.318
+    seed=20  round_robin             rate=0.236  reward=0.054
+    seed=20  random                  rate=0.249  reward=0.057
+    seed=20  wiql_ucb                rate=0.139  reward=0.032
+    seed=20  wiql_ucb_no_bias        rate=0.406  reward=0.094
+    seed=21  round_robin             rate=0.346  reward=0.188
+    seed=21  random                  rate=0.346  reward=0.188
+    seed=21  wiql_ucb                rate=0.374  reward=0.203
+    seed=21  wiql_ucb_no_bias        rate=0.527  reward=0.287
+    seed=22  round_robin             rate=0.368  reward=0.176
+    seed=22  random                  rate=0.367  reward=0.176
+    seed=22  wiql_ucb                rate=0.691  reward=0.332
+    seed=22  wiql_ucb_no_bias        rate=0.691  reward=0.332
+    seed=23  round_robin             rate=0.366  reward=0.222
+    seed=23  random                  rate=0.362  reward=0.219
+    seed=23  wiql_ucb                rate=0.199  reward=0.120
+    seed=23  wiql_ucb_no_bias        rate=0.538  reward=0.326
+    seed=24  round_robin             rate=0.300  reward=0.153
+    seed=24  random                  rate=0.313  reward=0.160
+    seed=24  wiql_ucb                rate=0.207  reward=0.105
+    seed=24  wiql_ucb_no_bias        rate=0.521  reward=0.266
+    seed=25  round_robin             rate=0.361  reward=0.117
+    seed=25  random                  rate=0.361  reward=0.118
+    seed=25  wiql_ucb                rate=0.761  reward=0.249
+    seed=25  wiql_ucb_no_bias        rate=0.745  reward=0.244
+    seed=26  round_robin             rate=0.335  reward=0.106
+    seed=26  random                  rate=0.360  reward=0.114
+    seed=26  wiql_ucb                rate=0.421  reward=0.134
+    seed=26  wiql_ucb_no_bias        rate=0.563  reward=0.180
+    seed=27  round_robin             rate=0.146  reward=0.060
+    seed=27  random                  rate=0.147  reward=0.060
+    seed=27  wiql_ucb                rate=0.023  reward=0.009
+    seed=27  wiql_ucb_no_bias        rate=0.193  reward=0.079
+    seed=28  round_robin             rate=0.283  reward=0.079
+    seed=28  random                  rate=0.292  reward=0.081
+    seed=28  wiql_ucb                rate=0.024  reward=0.006
+    seed=28  wiql_ucb_no_bias        rate=0.553  reward=0.155
+    seed=29  round_robin             rate=0.336  reward=0.130
+    seed=29  random                  rate=0.352  reward=0.136
+    seed=29  wiql_ucb                rate=0.593  reward=0.229
+    seed=29  wiql_ucb_no_bias        rate=0.595  reward=0.230
+    Wilcoxon WIQL vs round_robin: p=0.7551
+    Wilcoxon WIQL vs random: p=0.7486
+
+  Scenario: periodic | seeds=30 T=5000 dt=100μs
+    seed= 0  round_robin             rate=0.244  reward=0.132
+    seed= 0  random                  rate=0.250  reward=0.136
+    seed= 0  wiql_ucb                rate=0.131  reward=0.070
+    seed= 0  wiql_ucb_no_bias        rate=0.144  reward=0.078
+    seed= 1  round_robin             rate=0.220  reward=0.096
+    seed= 1  random                  rate=0.219  reward=0.096
+    seed= 1  wiql_ucb                rate=0.137  reward=0.059
+    seed= 1  wiql_ucb_no_bias        rate=0.418  reward=0.183
+    seed= 2  round_robin             rate=0.320  reward=0.142
+    seed= 2  random                  rate=0.324  reward=0.144
+    seed= 2  wiql_ucb                rate=0.496  reward=0.221
+    seed= 2  wiql_ucb_no_bias        rate=0.613  reward=0.273
+    seed= 3  round_robin             rate=0.322  reward=0.096
+    seed= 3  random                  rate=0.318  reward=0.095
+    seed= 3  wiql_ucb                rate=0.594  reward=0.179
+    seed= 3  wiql_ucb_no_bias        rate=0.606  reward=0.182
+    seed= 4  round_robin             rate=0.257  reward=0.126
+    seed= 4  random                  rate=0.256  reward=0.125
+    seed= 4  wiql_ucb                rate=0.088  reward=0.043
+    seed= 4  wiql_ucb_no_bias        rate=0.405  reward=0.199
+    seed= 5  round_robin             rate=0.282  reward=0.140
+    seed= 5  random                  rate=0.284  reward=0.141
+    seed= 5  wiql_ucb                rate=0.420  reward=0.209
+    seed= 5  wiql_ucb_no_bias        rate=0.420  reward=0.209
+    seed= 6  round_robin             rate=0.322  reward=0.126
+    seed= 6  random                  rate=0.316  reward=0.123
+    seed= 6  wiql_ucb                rate=0.097  reward=0.037
+    seed= 6  wiql_ucb_no_bias        rate=0.619  reward=0.243
+    seed= 7  round_robin             rate=0.337  reward=0.170
+    seed= 7  random                  rate=0.336  reward=0.170
+    seed= 7  wiql_ucb                rate=0.080  reward=0.040
+    seed= 7  wiql_ucb_no_bias        rate=0.362  reward=0.183
+    seed= 8  round_robin             rate=0.322  reward=0.146
+    seed= 8  random                  rate=0.325  reward=0.147
+    seed= 8  wiql_ucb                rate=0.045  reward=0.020
+    seed= 8  wiql_ucb_no_bias        rate=0.679  reward=0.309
+    seed= 9  round_robin             rate=0.324  reward=0.131
+    seed= 9  random                  rate=0.320  reward=0.129
+    seed= 9  wiql_ucb                rate=0.174  reward=0.070
+    seed= 9  wiql_ucb_no_bias        rate=0.536  reward=0.217
+    seed=10  round_robin             rate=0.364  reward=0.155
+    seed=10  random                  rate=0.365  reward=0.155
+    seed=10  wiql_ucb                rate=0.190  reward=0.080
+    seed=10  wiql_ucb_no_bias        rate=0.301  reward=0.128
+    seed=11  round_robin             rate=0.339  reward=0.118
+    seed=11  random                  rate=0.324  reward=0.112
+    seed=11  wiql_ucb                rate=0.495  reward=0.172
+    seed=11  wiql_ucb_no_bias        rate=0.460  reward=0.160
+    seed=12  round_robin             rate=0.324  reward=0.113
+    seed=12  random                  rate=0.330  reward=0.115
+    seed=12  wiql_ucb                rate=0.506  reward=0.177
+    seed=12  wiql_ucb_no_bias        rate=0.562  reward=0.197
+    seed=13  round_robin             rate=0.240  reward=0.067
+    seed=13  random                  rate=0.237  reward=0.066
+    seed=13  wiql_ucb                rate=0.206  reward=0.058
+    seed=13  wiql_ucb_no_bias        rate=0.496  reward=0.140
+    seed=14  round_robin             rate=0.367  reward=0.186
+    seed=14  random                  rate=0.365  reward=0.185
+    seed=14  wiql_ucb                rate=0.151  reward=0.076
+    seed=14  wiql_ucb_no_bias        rate=0.658  reward=0.334
+    seed=15  round_robin             rate=0.356  reward=0.127
+    seed=15  random                  rate=0.353  reward=0.126
+    seed=15  wiql_ucb                rate=0.189  reward=0.067
+    seed=15  wiql_ucb_no_bias        rate=0.658  reward=0.237
+    seed=16  round_robin             rate=0.330  reward=0.088
+    seed=16  random                  rate=0.345  reward=0.092
+    seed=16  wiql_ucb                rate=0.084  reward=0.022
+    seed=16  wiql_ucb_no_bias        rate=0.421  reward=0.112
+    seed=17  round_robin             rate=0.365  reward=0.128
+    seed=17  random                  rate=0.372  reward=0.130
+    seed=17  wiql_ucb                rate=0.683  reward=0.239
+    seed=17  wiql_ucb_no_bias        rate=0.877  reward=0.308
+    seed=18  round_robin             rate=0.349  reward=0.103
+    seed=18  random                  rate=0.359  reward=0.106
+    seed=18  wiql_ucb                rate=0.288  reward=0.085
+    seed=18  wiql_ucb_no_bias        rate=0.474  reward=0.141
+    seed=19  round_robin             rate=0.299  reward=0.137
+    seed=19  random                  rate=0.299  reward=0.137
+    seed=19  wiql_ucb                rate=0.023  reward=0.010
+    seed=19  wiql_ucb_no_bias        rate=0.444  reward=0.204
+    seed=20  round_robin             rate=0.217  reward=0.047
+    seed=20  random                  rate=0.214  reward=0.046
+    seed=20  wiql_ucb                rate=0.366  reward=0.080
+    seed=20  wiql_ucb_no_bias        rate=0.399  reward=0.087
+    seed=21  round_robin             rate=0.353  reward=0.203
+    seed=21  random                  rate=0.352  reward=0.203
+    seed=21  wiql_ucb                rate=0.353  reward=0.204
+    seed=21  wiql_ucb_no_bias        rate=0.642  reward=0.371
+    seed=22  round_robin             rate=0.357  reward=0.168
+    seed=22  random                  rate=0.351  reward=0.165
+    seed=22  wiql_ucb                rate=0.600  reward=0.283
+    seed=22  wiql_ucb_no_bias        rate=0.591  reward=0.279
+    seed=23  round_robin             rate=0.348  reward=0.137
+    seed=23  random                  rate=0.347  reward=0.136
+    seed=23  wiql_ucb                rate=0.126  reward=0.049
+    seed=23  wiql_ucb_no_bias        rate=0.535  reward=0.211
+    seed=24  round_robin             rate=0.336  reward=0.118
+    seed=24  random                  rate=0.345  reward=0.121
+    seed=24  wiql_ucb                rate=0.474  reward=0.166
+    seed=24  wiql_ucb_no_bias        rate=0.535  reward=0.188
+    seed=25  round_robin             rate=0.345  reward=0.086
+    seed=25  random                  rate=0.359  reward=0.090
+    seed=25  wiql_ucb                rate=0.867  reward=0.218
+    seed=25  wiql_ucb_no_bias        rate=0.603  reward=0.151
+    seed=26  round_robin             rate=0.349  reward=0.127
+    seed=26  random                  rate=0.355  reward=0.129
+    seed=26  wiql_ucb                rate=0.519  reward=0.189
+    seed=26  wiql_ucb_no_bias        rate=0.511  reward=0.186
+    seed=27  round_robin             rate=0.328  reward=0.082
+    seed=27  random                  rate=0.324  reward=0.081
+    seed=27  wiql_ucb                rate=0.038  reward=0.009
+    seed=27  wiql_ucb_no_bias        rate=0.315  reward=0.079
+    seed=28  round_robin             rate=0.297  reward=0.091
+    seed=28  random                  rate=0.289  reward=0.088
+    seed=28  wiql_ucb                rate=0.027  reward=0.007
+    seed=28  wiql_ucb_no_bias        rate=0.448  reward=0.138
+    seed=29  round_robin             rate=0.354  reward=0.099
+    seed=29  random                  rate=0.361  reward=0.101
+    seed=29  wiql_ucb                rate=0.849  reward=0.239
+    seed=29  wiql_ucb_no_bias        rate=0.601  reward=0.169
+    Wilcoxon WIQL vs round_robin: p=0.7011
+    Wilcoxon WIQL vs random: p=0.6868
+
+  Scenario: freq_agile | seeds=30 T=5000 dt=1000μs
+    seed= 0  round_robin             rate=0.301  reward=0.240
+    seed= 0  random                  rate=0.299  reward=0.238
+    seed= 0  wiql_ucb                rate=0.174  reward=0.138
+    seed= 0  wiql_ucb_no_bias        rate=0.455  reward=0.363
+    seed= 1  round_robin             rate=0.249  reward=0.192
+    seed= 1  random                  rate=0.251  reward=0.194
+    seed= 1  wiql_ucb                rate=0.112  reward=0.086
+    seed= 1  wiql_ucb_no_bias        rate=0.392  reward=0.303
+    seed= 2  round_robin             rate=0.343  reward=0.271
+    seed= 2  random                  rate=0.339  reward=0.269
+    seed= 2  wiql_ucb                rate=0.497  reward=0.394
+    seed= 2  wiql_ucb_no_bias        rate=0.484  reward=0.383
+    seed= 3  round_robin             rate=0.325  reward=0.231
+    seed= 3  random                  rate=0.324  reward=0.230
+    seed= 3  wiql_ucb                rate=0.377  reward=0.268
+    seed= 3  wiql_ucb_no_bias        rate=0.350  reward=0.249
+    seed= 4  round_robin             rate=0.373  reward=0.262
+    seed= 4  random                  rate=0.372  reward=0.262
+    seed= 4  wiql_ucb                rate=0.250  reward=0.176
+    seed= 4  wiql_ucb_no_bias        rate=0.458  reward=0.322
+    seed= 5  round_robin             rate=0.320  reward=0.262
+    seed= 5  random                  rate=0.316  reward=0.259
+    seed= 5  wiql_ucb                rate=0.257  reward=0.210
+    seed= 5  wiql_ucb_no_bias        rate=0.462  reward=0.379
+    seed= 6  round_robin             rate=0.282  reward=0.200
+    seed= 6  random                  rate=0.290  reward=0.205
+    seed= 6  wiql_ucb                rate=0.213  reward=0.150
+    seed= 6  wiql_ucb_no_bias        rate=0.392  reward=0.278
+    seed= 7  round_robin             rate=0.343  reward=0.277
+    seed= 7  random                  rate=0.340  reward=0.275
+    seed= 7  wiql_ucb                rate=0.254  reward=0.204
+    seed= 7  wiql_ucb_no_bias        rate=0.420  reward=0.339
+    seed= 8  round_robin             rate=0.324  reward=0.248
+    seed= 8  random                  rate=0.323  reward=0.247
+    seed= 8  wiql_ucb                rate=0.242  reward=0.185
+    seed= 8  wiql_ucb_no_bias        rate=0.440  reward=0.337
+    seed= 9  round_robin             rate=0.326  reward=0.249
+    seed= 9  random                  rate=0.331  reward=0.253
+    seed= 9  wiql_ucb                rate=0.213  reward=0.162
+    seed= 9  wiql_ucb_no_bias        rate=0.492  reward=0.377
+    seed=10  round_robin             rate=0.316  reward=0.215
+    seed=10  random                  rate=0.317  reward=0.215
+    seed=10  wiql_ucb                rate=0.105  reward=0.071
+    seed=10  wiql_ucb_no_bias        rate=0.536  reward=0.365
+    seed=11  round_robin             rate=0.303  reward=0.234
+    seed=11  random                  rate=0.306  reward=0.236
+    seed=11  wiql_ucb                rate=0.334  reward=0.258
+    seed=11  wiql_ucb_no_bias        rate=0.399  reward=0.307
+    seed=12  round_robin             rate=0.331  reward=0.237
+    seed=12  random                  rate=0.335  reward=0.240
+    seed=12  wiql_ucb                rate=0.359  reward=0.257
+    seed=12  wiql_ucb_no_bias        rate=0.606  reward=0.434
+    seed=13  round_robin             rate=0.283  reward=0.202
+    seed=13  random                  rate=0.274  reward=0.196
+    seed=13  wiql_ucb                rate=0.190  reward=0.135
+    seed=13  wiql_ucb_no_bias        rate=0.314  reward=0.224
+    seed=14  round_robin             rate=0.333  reward=0.271
+    seed=14  random                  rate=0.325  reward=0.265
+    seed=14  wiql_ucb                rate=0.190  reward=0.155
+    seed=14  wiql_ucb_no_bias        rate=0.461  reward=0.377
+    seed=15  round_robin             rate=0.266  reward=0.210
+    seed=15  random                  rate=0.274  reward=0.216
+    seed=15  wiql_ucb                rate=0.064  reward=0.050
+    seed=15  wiql_ucb_no_bias        rate=0.286  reward=0.226
+    seed=16  round_robin             rate=0.314  reward=0.207
+    seed=16  random                  rate=0.315  reward=0.207
+    seed=16  wiql_ucb                rate=0.364  reward=0.240
+    seed=16  wiql_ucb_no_bias        rate=0.445  reward=0.293
+    seed=17  round_robin             rate=0.355  reward=0.261
+    seed=17  random                  rate=0.363  reward=0.267
+    seed=17  wiql_ucb                rate=0.613  reward=0.451
+    seed=17  wiql_ucb_no_bias        rate=0.556  reward=0.409
+    seed=18  round_robin             rate=0.363  reward=0.235
+    seed=18  random                  rate=0.368  reward=0.238
+    seed=18  wiql_ucb                rate=0.571  reward=0.370
+    seed=18  wiql_ucb_no_bias        rate=0.542  reward=0.351
+    seed=19  round_robin             rate=0.327  reward=0.225
+    seed=19  random                  rate=0.330  reward=0.227
+    seed=19  wiql_ucb                rate=0.121  reward=0.083
+    seed=19  wiql_ucb_no_bias        rate=0.483  reward=0.333
+    seed=20  round_robin             rate=0.201  reward=0.131
+    seed=20  random                  rate=0.202  reward=0.132
+    seed=20  wiql_ucb                rate=0.143  reward=0.093
+    seed=20  wiql_ucb_no_bias        rate=0.334  reward=0.218
+    seed=21  round_robin             rate=0.314  reward=0.287
+    seed=21  random                  rate=0.312  reward=0.284
+    seed=21  wiql_ucb                rate=0.293  reward=0.268
+    seed=21  wiql_ucb_no_bias        rate=0.485  reward=0.443
+    seed=22  round_robin             rate=0.337  reward=0.242
+    seed=22  random                  rate=0.338  reward=0.243
+    seed=22  wiql_ucb                rate=0.487  reward=0.350
+    seed=22  wiql_ucb_no_bias        rate=0.489  reward=0.352
+    seed=23  round_robin             rate=0.339  reward=0.272
+    seed=23  random                  rate=0.339  reward=0.272
+    seed=23  wiql_ucb                rate=0.366  reward=0.294
+    seed=23  wiql_ucb_no_bias        rate=0.427  reward=0.343
+    seed=24  round_robin             rate=0.321  reward=0.200
+    seed=24  random                  rate=0.321  reward=0.200
+    seed=24  wiql_ucb                rate=0.408  reward=0.254
+    seed=24  wiql_ucb_no_bias        rate=0.476  reward=0.297
+    seed=25  round_robin             rate=0.319  reward=0.215
+    seed=25  random                  rate=0.317  reward=0.214
+    seed=25  wiql_ucb                rate=0.433  reward=0.292
+    seed=25  wiql_ucb_no_bias        rate=0.565  reward=0.382
+    seed=26  round_robin             rate=0.335  reward=0.244
+    seed=26  random                  rate=0.334  reward=0.243
+    seed=26  wiql_ucb                rate=0.362  reward=0.264
+    seed=26  wiql_ucb_no_bias        rate=0.436  reward=0.318
+    seed=27  round_robin             rate=0.297  reward=0.202
+    seed=27  random                  rate=0.303  reward=0.206
+    seed=27  wiql_ucb                rate=0.236  reward=0.160
+    seed=27  wiql_ucb_no_bias        rate=0.364  reward=0.248
+    seed=28  round_robin             rate=0.289  reward=0.180
+    seed=28  random                  rate=0.291  reward=0.181
+    seed=28  wiql_ucb                rate=0.179  reward=0.111
+    seed=28  wiql_ucb_no_bias        rate=0.434  reward=0.271
+    seed=29  round_robin             rate=0.353  reward=0.239
+    seed=29  random                  rate=0.352  reward=0.238
+    seed=29  wiql_ucb                rate=0.676  reward=0.458
+    seed=29  wiql_ucb_no_bias        rate=0.702  reward=0.476
+    Wilcoxon WIQL vs round_robin: p=0.8035
+    Wilcoxon WIQL vs random: p=0.8091
+
+  → results/test1_raw.csv
+  → results/test1_summary.md
+  → results/test1_barchart.png
+
+[Test 2] Periodic Module vs Jitter
+
+  Jitter ratio: 0.00 | seeds=30 dt=100μs
+    seed= 0  wiql=0.014  rr=0.364
+    seed= 1  wiql=0.028  rr=0.171
+    seed= 2  wiql=0.511  rr=0.256
+    seed= 3  wiql=0.770  rr=0.303
+    seed= 4  wiql=0.154  rr=0.371
+    seed= 5  wiql=0.131  rr=0.088
+    seed= 6  wiql=0.021  rr=0.365
+    seed= 7  wiql=0.117  rr=0.326
+    seed= 8  wiql=0.106  rr=0.306
+    seed= 9  wiql=0.043  rr=0.247
+    seed=10  wiql=0.009  rr=0.354
+    seed=11  wiql=0.841  rr=0.360
+    seed=12  wiql=0.476  rr=0.318
+    seed=13  wiql=0.142  rr=0.182
+    seed=14  wiql=0.400  rr=0.358
+    seed=15  wiql=0.089  rr=0.357
+    seed=16  wiql=0.049  rr=0.321
+    seed=17  wiql=0.191  rr=0.350
+    seed=18  wiql=0.189  rr=0.344
+    seed=19  wiql=0.034  rr=0.250
+    seed=20  wiql=0.290  rr=0.344
+    seed=21  wiql=0.438  rr=0.362
+    seed=22  wiql=0.505  rr=0.333
+    seed=23  wiql=0.143  rr=0.373
+    seed=24  wiql=0.675  rr=0.363
+    seed=25  wiql=0.656  rr=0.242
+    seed=26  wiql=0.117  rr=0.362
+    seed=27  wiql=0.125  rr=0.267
+    seed=28  wiql=0.005  rr=0.196
+    seed=29  wiql=0.575  rr=0.261
+
+  Jitter ratio: 0.01 | seeds=30 dt=100μs
+    seed= 0  wiql=0.027  rr=0.353
+    seed= 1  wiql=0.025  rr=0.173
+    seed= 2  wiql=0.519  rr=0.252
+    seed= 3  wiql=0.772  rr=0.308
+    seed= 4  wiql=0.145  rr=0.357
+    seed= 5  wiql=0.124  rr=0.086
+    seed= 6  wiql=0.038  rr=0.359
+    seed= 7  wiql=0.090  rr=0.332
+    seed= 8  wiql=0.105  rr=0.312
+    seed= 9  wiql=0.042  rr=0.251
+    seed=10  wiql=0.019  rr=0.375
+    seed=11  wiql=0.840  rr=0.347
+    seed=12  wiql=0.468  rr=0.318
+    seed=13  wiql=0.148  rr=0.198
+    seed=14  wiql=0.394  rr=0.363
+    seed=15  wiql=0.087  rr=0.357
+    seed=16  wiql=0.041  rr=0.360
+    seed=17  wiql=0.187  rr=0.354
+    seed=18  wiql=0.156  rr=0.355
+    seed=19  wiql=0.031  rr=0.250
+    seed=20  wiql=0.317  rr=0.363
+    seed=21  wiql=0.443  rr=0.366
+    seed=22  wiql=0.494  rr=0.357
+    seed=23  wiql=0.142  rr=0.369
+    seed=24  wiql=0.666  rr=0.380
+    seed=25  wiql=0.672  rr=0.224
+    seed=26  wiql=0.139  rr=0.369
+    seed=27  wiql=0.118  rr=0.291
+    seed=28  wiql=0.007  rr=0.201
+    seed=29  wiql=0.581  rr=0.277
+
+  Jitter ratio: 0.02 | seeds=30 dt=100μs
+    seed= 0  wiql=0.028  rr=0.367
+    seed= 1  wiql=0.030  rr=0.170
+    seed= 2  wiql=0.513  rr=0.265
+    seed= 3  wiql=0.764  rr=0.306
+    seed= 4  wiql=0.146  rr=0.376
+    seed= 5  wiql=0.128  rr=0.094
+    seed= 6  wiql=0.050  rr=0.361
+    seed= 7  wiql=0.084  rr=0.323
+    seed= 8  wiql=0.132  rr=0.309
+    seed= 9  wiql=0.043  rr=0.260
+    seed=10  wiql=0.025  rr=0.340
+    seed=11  wiql=0.842  rr=0.354
+    seed=12  wiql=0.474  rr=0.325
+    seed=13  wiql=0.140  rr=0.187
+    seed=14  wiql=0.396  rr=0.352
+    seed=15  wiql=0.088  rr=0.364
+    seed=16  wiql=0.026  rr=0.337
+    seed=17  wiql=0.191  rr=0.351
+    seed=18  wiql=0.169  rr=0.353
+    seed=19  wiql=0.017  rr=0.249
+    seed=20  wiql=0.307  rr=0.360
+    seed=21  wiql=0.442  rr=0.366
+    seed=22  wiql=0.507  rr=0.357
+    seed=23  wiql=0.140  rr=0.368
+    seed=24  wiql=0.670  rr=0.359
+    seed=25  wiql=0.668  rr=0.257
+    seed=26  wiql=0.147  rr=0.364
+    seed=27  wiql=0.104  rr=0.270
+    seed=28  wiql=0.002  rr=0.222
+    seed=29  wiql=0.590  rr=0.263
+
+  Jitter ratio: 0.05 | seeds=30 dt=100μs
+    seed= 0  wiql=0.013  rr=0.351
+    seed= 1  wiql=0.030  rr=0.175
+    seed= 2  wiql=0.508  rr=0.267
+    seed= 3  wiql=0.753  rr=0.313
+    seed= 4  wiql=0.150  rr=0.368
+    seed= 5  wiql=0.123  rr=0.086
+    seed= 6  wiql=0.027  rr=0.376
+    seed= 7  wiql=0.076  rr=0.319
+    seed= 8  wiql=0.112  rr=0.311
+    seed= 9  wiql=0.044  rr=0.254
+    seed=10  wiql=0.016  rr=0.365
+    seed=11  wiql=0.841  rr=0.355
+    seed=12  wiql=0.466  rr=0.319
+    seed=13  wiql=0.143  rr=0.191
+    seed=14  wiql=0.397  rr=0.349
+    seed=15  wiql=0.089  rr=0.361
+    seed=16  wiql=0.027  rr=0.342
+    seed=17  wiql=0.187  rr=0.344
+    seed=18  wiql=0.155  rr=0.365
+    seed=19  wiql=0.029  rr=0.261
+    seed=20  wiql=0.301  rr=0.351
+    seed=21  wiql=0.438  rr=0.375
+    seed=22  wiql=0.502  rr=0.361
+    seed=23  wiql=0.130  rr=0.368
+    seed=24  wiql=0.670  rr=0.390
+    seed=25  wiql=0.681  rr=0.259
+    seed=26  wiql=0.135  rr=0.358
+    seed=27  wiql=0.113  rr=0.290
+    seed=28  wiql=0.003  rr=0.220
+    seed=29  wiql=0.578  rr=0.235
+
+  Jitter ratio: 0.08 | seeds=30 dt=100μs
+    seed= 0  wiql=0.012  rr=0.363
+    seed= 1  wiql=0.027  rr=0.183
+    seed= 2  wiql=0.518  rr=0.253
+    seed= 3  wiql=0.755  rr=0.302
+    seed= 4  wiql=0.147  rr=0.351
+    seed= 5  wiql=0.121  rr=0.086
+    seed= 6  wiql=0.032  rr=0.361
+    seed= 7  wiql=0.080  rr=0.321
+    seed= 8  wiql=0.101  rr=0.316
+    seed= 9  wiql=0.050  rr=0.248
+    seed=10  wiql=0.020  rr=0.357
+    seed=11  wiql=0.839  rr=0.357
+    seed=12  wiql=0.471  rr=0.315
+    seed=13  wiql=0.145  rr=0.175
+    seed=14  wiql=0.394  rr=0.359
+    seed=15  wiql=0.089  rr=0.358
+    seed=16  wiql=0.052  rr=0.376
+    seed=17  wiql=0.180  rr=0.348
+    seed=18  wiql=0.177  rr=0.347
+    seed=19  wiql=0.026  rr=0.253
+    seed=20  wiql=0.304  rr=0.344
+    seed=21  wiql=0.439  rr=0.373
+    seed=22  wiql=0.497  rr=0.354
+    seed=23  wiql=0.133  rr=0.364
+    seed=24  wiql=0.662  rr=0.377
+    seed=25  wiql=0.672  rr=0.268
+    seed=26  wiql=0.145  rr=0.364
+    seed=27  wiql=0.112  rr=0.266
+    seed=28  wiql=0.009  rr=0.215
+    seed=29  wiql=0.560  rr=0.215
+
+  Jitter ratio: 0.10 | seeds=30 dt=100μs
+    seed= 0  wiql=0.012  rr=0.355
+    seed= 1  wiql=0.028  rr=0.186
+    seed= 2  wiql=0.500  rr=0.263
+    seed= 3  wiql=0.763  rr=0.304
+    seed= 4  wiql=0.144  rr=0.359
+    seed= 5  wiql=0.128  rr=0.085
+    seed= 6  wiql=0.020  rr=0.377
+    seed= 7  wiql=0.080  rr=0.319
+    seed= 8  wiql=0.101  rr=0.302
+    seed= 9  wiql=0.039  rr=0.241
+    seed=10  wiql=0.020  rr=0.345
+    seed=11  wiql=0.843  rr=0.359
+    seed=12  wiql=0.472  rr=0.328
+    seed=13  wiql=0.141  rr=0.189
+    seed=14  wiql=0.401  rr=0.345
+    seed=15  wiql=0.086  rr=0.354
+    seed=16  wiql=0.051  rr=0.343
+    seed=17  wiql=0.184  rr=0.363
+    seed=18  wiql=0.172  rr=0.351
+    seed=19  wiql=0.029  rr=0.253
+    seed=20  wiql=0.310  rr=0.353
+    seed=21  wiql=0.440  rr=0.369
+    seed=22  wiql=0.498  rr=0.359
+    seed=23  wiql=0.133  rr=0.379
+    seed=24  wiql=0.675  rr=0.368
+    seed=25  wiql=0.709  rr=0.239
+    seed=26  wiql=0.132  rr=0.381
+    seed=27  wiql=0.115  rr=0.275
+    seed=28  wiql=0.008  rr=0.220
+    seed=29  wiql=0.563  rr=0.257
+
+  Jitter ratio: 0.15 | seeds=30 dt=100μs
+    seed= 0  wiql=0.011  rr=0.359
+    seed= 1  wiql=0.026  rr=0.169
+    seed= 2  wiql=0.504  rr=0.269
+    seed= 3  wiql=0.768  rr=0.315
+    seed= 4  wiql=0.146  rr=0.362
+    seed= 5  wiql=0.128  rr=0.084
+    seed= 6  wiql=0.042  rr=0.355
+    seed= 7  wiql=0.078  rr=0.316
+    seed= 8  wiql=0.102  rr=0.311
+    seed= 9  wiql=0.073  rr=0.254
+    seed=10  wiql=0.015  rr=0.362
+    seed=11  wiql=0.846  rr=0.346
+    seed=12  wiql=0.471  rr=0.326
+    seed=13  wiql=0.139  rr=0.196
+    seed=14  wiql=0.387  rr=0.364
+    seed=15  wiql=0.089  rr=0.357
+    seed=16  wiql=0.045  rr=0.362
+    seed=17  wiql=0.180  rr=0.342
+    seed=18  wiql=0.179  rr=0.341
+    seed=19  wiql=0.025  rr=0.254
+    seed=20  wiql=0.292  rr=0.365
+    seed=21  wiql=0.436  rr=0.371
+    seed=22  wiql=0.499  rr=0.365
+    seed=23  wiql=0.135  rr=0.373
+    seed=24  wiql=0.670  rr=0.365
+    seed=25  wiql=0.682  rr=0.226
+    seed=26  wiql=0.135  rr=0.363
+    seed=27  wiql=0.102  rr=0.279
+    seed=28  wiql=0.004  rr=0.203
+    seed=29  wiql=0.543  rr=0.241
+
+  Jitter ratio: 0.20 | seeds=30 dt=100μs
+    seed= 0  wiql=0.023  rr=0.361
+    seed= 1  wiql=0.044  rr=0.172
+    seed= 2  wiql=0.509  rr=0.259
+    seed= 3  wiql=0.762  rr=0.301
+    seed= 4  wiql=0.144  rr=0.379
+    seed= 5  wiql=0.125  rr=0.092
+    seed= 6  wiql=0.046  rr=0.372
+    seed= 7  wiql=0.100  rr=0.322
+    seed= 8  wiql=0.102  rr=0.302
+    seed= 9  wiql=0.070  rr=0.238
+    seed=10  wiql=0.017  rr=0.351
+    seed=11  wiql=0.829  rr=0.352
+    seed=12  wiql=0.472  rr=0.315
+    seed=13  wiql=0.143  rr=0.194
+    seed=14  wiql=0.401  rr=0.350
+    seed=15  wiql=0.087  rr=0.366
+    seed=16  wiql=0.032  rr=0.341
+    seed=17  wiql=0.180  rr=0.350
+    seed=18  wiql=0.174  rr=0.356
+    seed=19  wiql=0.029  rr=0.250
+    seed=20  wiql=0.303  rr=0.336
+    seed=21  wiql=0.432  rr=0.367
+    seed=22  wiql=0.491  rr=0.355
+    seed=23  wiql=0.134  rr=0.365
+    seed=24  wiql=0.672  rr=0.372
+    seed=25  wiql=0.688  rr=0.249
+    seed=26  wiql=0.123  rr=0.359
+    seed=27  wiql=0.128  rr=0.297
+    seed=28  wiql=0.006  rr=0.213
+    seed=29  wiql=0.585  rr=0.271
+
+  → results/test2_raw.csv
+  → results/test2_summary.md
+  → results/test2_jitter_curve.png
+
+[Demo] Generating visualization figure
+  → results/demo_visualization.png
+
+============================================================
+  SUCCESS CRITERIA CHECK
+============================================================
+  ✗ WIQL > RR in 'background': WIQL CI [0.210,0.364]  RR CI [0.285,0.322]  Wilcoxon p=0.7551
+  ✗ WIQL > RR in 'freq_agile': WIQL CI [0.248,0.359]  RR CI [0.303,0.328]  Wilcoxon p=0.8035
+  ✗ Periodic bias ON vs OFF: +-0.2012 intercept rate
+
+  Operating limit (CI lower bound < RR baseline): jitter/period ≥ 0%
+
+  Notes (honest findings):
+    • WIQL does not clearly beat RR in background (CI overlap, p=0.7551)
+    • WIQL does not clearly beat RR in freq_agile (CI overlap, p=0.8035)
+    • Periodic bias ON does not help in periodic scenario (diff=-0.2012)
+    • Module C operating limit: ≥0% jitter/period
+
+  All outputs in: /home/vedant/Downloads/SIH/results

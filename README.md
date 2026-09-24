@@ -1,95 +1,145 @@
-# EW Smart Scan Strategy
+# Smart Scan Strategy for Electronic Warfare
 
-**SIH 2026 — PS 26055 (DRDO)**
+**SIH 2026 Problem Statement 26055 — DRDO**
+**Team Coding Saints (ID 120303)**
 
-Research-grounded prototype for Electronic Warfare receiver scheduling using
-Restless Multi-Armed Bandit / POMDP theory and Whittle index schedulers.
-Not a claim of fielded deployment.
-
----
-
-## Architecture Overview
-
-The system schedules K simultaneous frequency-band scans out of N total bands using:
-
-- **Module A** — WIQL-UCB baseline → Neural-Q-Whittle scheduler
-- **Module B** — DQWIC contextual threat-weighting layer
-- **Module C** — Renewal-process Whittle index for periodic emitters
-- **Module D** — Adversarial jitter robustness via Kalman filter tracking
-
-Training and evaluation use the **Turing Synthetic Radar Dataset (TSRD)**
-(Gunn et al., 2026).
+A Whittle-inspired priority scheduler for Electronic Support (ES) receivers operating with no prior emitter intelligence. We formulate spectrum-scan interception as a restless multi-armed bandit with a POMDP belief state, and combine a priority index with an additive periodic-recurrence bias.
 
 ---
 
-## Installation
+## Headline Results
 
-### 1. Clone and install the package
+| Result | Value | Significance |
+|---|---|---|
+| Core scheduler vs. round-robin (3 scenarios) | +0.14 to +0.20 intercept rate | N=30, p<0.001 |
+| Periodic module, standalone | 0.975 ± 0.006 intercept rate | worst-case 0.939 |
+| Multi-band convergence (8-band, K=3) | 30/30 seeds, worst-case 0.419 | 50-step RR pre-phase fix |
+| Frequency-agile handling | +0.107 min across sensitivity sweep | p<0.001, all configs |
+
+---
+
+## What It Does
+
+Each frequency band is an arm of a restless multi-armed bandit. Occupancy evolves whether or not the band is observed. The scheduler tracks a per-band belief state from hit/miss feedback, computes a priority index per band, and scans the top-M bands each step.
+
+The priority index combines three terms:
+- **Belief value** — W_i · b_i(t)
+- **Additive periodic bias** — γ · periodic_bonus_i(t)
+- **UCB exploration** — max(c · sqrt(ln t / N_i(t)), ε)
+
+Where ε = 0.01 is a minimum exploration floor that prevents permanent lockout of bands in non-stationary environments.
+
+---
+
+## Quick Start
 
 ```bash
-pip install -e ".[dev]"
-```
-
-### 2. Install PyTorch (CPU-only)
-
-PyTorch is a heavy dependency and is NOT included in `pyproject.toml`.
-Install it separately:
-
-```bash
-pip install torch==2.3.1 --index-url https://download.pytorch.org/whl/cpu
-```
-
-Or use the pinned file:
-
-```bash
-pip install -r requirements-torch.txt --index-url https://download.pytorch.org/whl/cpu
-```
-
-### 3. Install the Turing Deinterleaving Challenge package
-
-This is a git-only package and is not on PyPI:
-
-```bash
-pip install git+https://github.com/alan-turing-institute/turing-deinterleaving-challenge.git
+git clone https://github.com/coding-saints/smartscan-ps26055.git
+cd smartscan-ps26055
+pip install -r requirements.txt
+pytest tests/
 ```
 
 ---
 
-## HuggingFace Token Setup
-
-TSRD data is hosted on HuggingFace Hub. You must set the `HF_TOKEN` environment
-variable before downloading:
+## Reproduce the Paper Results
 
 ```bash
-export HF_TOKEN="your_huggingface_token_here"
+bash scripts/run_evaluation.sh
 ```
 
-**Never hardcode your token in source files or commit it to version control.**
-
-The system will raise a `CredentialError` if `HF_TOKEN` is not set when a
-dataset download is attempted.
+This runs the full N=30-seed harness across the three scenarios (background, periodic, frequency-agile) and writes results to `results/headline_numbers.json`.
 
 ---
 
-## Data
+## Run the Demo
 
-Place TSRD `.h5` files in the `data/` directory. The `data/.gitkeep` file
-is a placeholder — actual data files are git-ignored.
+```bash
+streamlit run demo/app.py
+```
+
+(A deployed version is available at [Streamlit Community Cloud — fill in after deployment])
 
 ---
 
-## Running Tests
+## Architecture
 
-```bash
-pytest tests/ -q
+See `docs/architecture.md` for the full system diagram and design notes.
+
+```
+I_i(t) = W_i · b_i(t)  +  γ · periodic_bonus_i(t)  +  max(c·√(ln t / N_i(t)), ε)
+         ─────────────    ──────────────────────────    ──────────────────────────
+          Belief value       Periodic recurrence              UCB exploration
+                                   bias                    (with floor ε = 0.01)
 ```
 
 ---
 
-## Running the Smoke Test
+## Project Structure
 
-```bash
-python scripts/smoke_test.py
+```
+smartscan-ps26055/
+├── src/
+│   ├── scheduler/          # WIQLScheduler, BeliefTracker, PeriodicInterceptModule
+│   ├── environment/        # RFEnvironment, ReceiverModel, PDWGenerator, TSRDLoader
+│   ├── evaluation/         # EvaluationHarness (7 FoMs), statistical harness, outputs
+│   └── baselines/          # RoundRobinPolicy, RandomPolicy
+├── demo/                   # Streamlit live demo (2 tabs, dark theme)
+├── tests/                  # 134 tests — unit, property-based, integration
+├── scripts/                # run_evaluation.sh, generate_figures.py
+├── docs/                   # Architecture, evaluation methodology, limitations, deployment
+├── results/                # Headline numbers, CSVs, plots
+│   └── figures/            # Generated plots (reproducible via generate_figures.py)
+└── data/                   # Data directory — see data/README.md for TSRD download
 ```
 
-> **Note**: The smoke test is a stub until Task 6 is implemented.
+---
+
+## What's Built vs. Roadmap
+
+**Built and validated:**
+- Core WIQL-UCB scheduler (tabular, ~320 bytes/arm, ~24 μs/step at K=8)
+- Belief-state update with realistic Pd=0.9, Pfa=0.01 (HMM POMDP)
+- Periodic recurrence module — standalone (0.975 ± 0.006) and multi-band integration (γ=5 gives +0.142, p=0.0011)
+- Statistical evaluation harness (N=30 seeds, 95% bootstrap CI, Wilcoxon signed-rank)
+- Frequency-agile handling via UCB de-prioritization (+0.107 min across hop-rate sweep)
+- UCB non-stationarity fix (exploration floor ε=0.01)
+- Live Streamlit demo dashboard
+
+**Roadmap:**
+- Frequency-agile correlated-transition modeling (P ∈ ℝ^{K×K})
+- Threat-weighted scheduling (DQWIC)
+- Adversarial-jitter robustness (EXP3/minimax)
+- Hardware LO retuning dead-time penalties
+
+---
+
+## Limitations
+
+- Indexability of the priority index is unverified; labeled "Whittle-inspired heuristic."
+- Sensitivity (minimum SNR for Pd ≥ 0.90) not measured in this evaluation.
+- Frequency-agile handling is reactive, not predictive of cross-band hops.
+- Multi-band periodic convergence required a 50-step round-robin discovery pre-phase to reach 30/30 seeds (8-band, K=3 harness); 30/30 also in standalone K=2 configuration.
+
+See `docs/limitations.md` for the full list.
+
+---
+
+## Citation
+
+If you use this code, please cite the work in `CITATION.cff`.
+
+```bibtex
+@misc{codingsaints2026smartscan,
+  title  = {Smart Scan Strategy for Electronic Warfare — SIH 2026, PS 26055},
+  author = {Coding Saints, Team ID 120303},
+  year   = {2026},
+  url    = {https://github.com/coding-saints/smartscan-ps26055}
+}
+```
+
+---
+
+## License
+
+MIT License — see `LICENSE`.

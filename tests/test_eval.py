@@ -33,7 +33,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from ew_smart_scan.eval.evaluation import EvaluationHarness, run_evaluation_episode
+from src.evaluation.harness import EvaluationHarness, run_evaluation_episode
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -349,11 +349,11 @@ def test_reset_clears_all_data():
 
 def test_run_evaluation_episode_integration():
     """run_evaluation_episode wires env+receiver+scheduler and returns valid metrics."""
-    from ew_smart_scan.env.rf_environment import RFEnvironment
-    from ew_smart_scan.env.belief_tracker import BeliefTracker
-    from ew_smart_scan.env.receiver_model import ReceiverModel
-    from ew_smart_scan.env.wiql_ucb import WIQLScheduler, ACTION_SCAN, ACTION_PASSIVE
-    from ew_smart_scan.models.pdw_generator import PDWGenerator
+    from src.environment.simulator import RFEnvironment
+    from src.scheduler.belief import BeliefTracker
+    from src.environment.receiver import ReceiverModel
+    from src.scheduler.wiql_ucb import WIQLScheduler, ACTION_SCAN, ACTION_PASSIVE
+    from src.environment.pdw_generator import PDWGenerator
 
     n_bands, k_scan, n_steps = 8, 3, 100
     band_cf    = [900.0 + i * 100.0 for i in range(n_bands)]

@@ -1,0 +1,99 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite both this repository and the referenced papers."
+title: "Smart Scan Strategy for Electronic Warfare"
+authors:
+  - name: "Coding Saints, Team ID 120303"
+repository-code: "https://github.com/coding-saints/smartscan-ps26055"
+license: MIT
+references:
+  - type: article
+    title: "Whittle index based Q-learning for restless bandits with average reward"
+    authors:
+      - family-names: "Avrachenkov"
+        given-names: "Konstantin E."
+      - family-names: "Borkar"
+        given-names: "Vivek S."
+    year: 2022
+    journal: "arXiv preprint"
+  - type: article
+    title: "Finite-Time Analysis of Whittle Index based Q-Learning for Restless Multi-Armed Bandits with Neural Network Function Approximation"
+    authors:
+      - family-names: "Xiong"
+        given-names: "Guojun"
+      - family-names: "Li"
+        given-names: "Jian"
+    year: 2023
+    journal: "arXiv preprint"
+  - type: article
+    title: "Indexability of restless bandit problems and optimality of Whittle index for dynamic multichannel access"
+    authors:
+      - family-names: "Liu"
+        given-names: "Keqin"
+      - family-names: "Zhao"
+        given-names: "Qing"
+    year: 2010
+    journal: "IEEE Transactions on Information Theory"
+  - type: article
+    title: "Signal Processing for Temporal Spectrum Sharing in a Multi-Radar Environment"
+    authors:
+      - family-names: "Paisana"
+        given-names: "Francisco"
+      - family-names: "Kaminski"
+        given-names: "Nicholas J."
+      - family-names: "Marchetti"
+        given-names: "Nicola"
+      - family-names: "DaSilva"
+        given-names: "Luiz A."
+    year: 2017
+    journal: "IEEE Transactions on Cognitive Communications and Networking"
+  - type: conference-paper
+    title: "Machine Learning-based Receiver Scheduling for Electronic Support"
+    authors:
+      - family-names: "Sekhar"
+        given-names: "Vaibhav"
+      - family-names: "Lechner"
+        given-names: "Benedikt"
+      - family-names: "Nguyen"
+        given-names: "Viet D."
+      - family-names: "Faulkner"
+        given-names: "Nick"
+    year: 2025
+    collection-title: "Proc. IEEE Military Communications Conference (MILCOM)"
+  - type: article
+    title: "Interception Model of Random Scanning Strategies Against Frequency-Agile Radar in Electronic Support"
+    authors:
+      - family-names: "Teissier"
+        given-names: "Vincent"
+      - family-names: "Toumi"
+        given-names: "Abdelmalek"
+      - family-names: "Khenchaf"
+        given-names: "Ali"
+    year: 2026
+    journal: "IEEE Transactions on Aerospace and Electronic Systems"
+  - type: conference-paper
+    title: "The Arithmetic of Receiver Scheduling for Electronic Support"
+    authors:
+      - family-names: "Clarkson"
+        given-names: "I. Vaughan L."
+    year: 2003
+    collection-title: "Proc. IEEE Aerospace Conference"
+  - type: conference-paper
+    title: "Optimal Periodic Sensor Scheduling in Electronic Support"
+    authors:
+      - family-names: "Clarkson"
+        given-names: "I. Vaughan L."
+    year: 2005
+    collection-title: "Defense Applications of Signal Processing (DASP)"
+  - type: article
+    title: "An Application of Explainable Multi-Agent Reinforcement Learning for Spectrum Situational Awareness"
+    authors:
+      - family-names: "Perini"
+        given-names: "Dominick J."
+      - family-names: "Muller"
+        given-names: "Braeden P."
+      - family-names: "Kopacz"
+        given-names: "Justin"
+      - family-names: "Michaels"
+        given-names: "Alan J."
+    year: 2025
+    journal: "Electronics"

@@ -16,8 +16,8 @@ import math
 import numpy as np
 import pytest
 
-from ew_smart_scan.models.pdw_generator import PDWGenerator, PeriodicBandConfig
-from ew_smart_scan.env.periodic_intercept import (
+from src.environment.pdw_generator import PDWGenerator, PeriodicBandConfig
+from src.scheduler.periodic import (
     PeriodicInterceptModule,
     combine_indices_rank,
     select_top_k_combined,
@@ -115,7 +115,7 @@ def test_periodic_config_backward_compat():
         p_emit=0.5, seed=42,
     )
     # Just check it runs and produces valid pulses
-    from ew_smart_scan.models.pulse import validate_pulse
+    from src.environment.pulse import validate_pulse
     for t in range(20):
         for p in gen.generate(t):
             validate_pulse(p)  # must not raise
@@ -234,7 +234,7 @@ def test_predict_next_arrival():
 
 def test_module_c_isolation_from_belief_tracker():
     """Running PeriodicInterceptModule does not alter BeliefTracker state."""
-    from ew_smart_scan.env.belief_tracker import BeliefTracker
+    from src.scheduler.belief import BeliefTracker
 
     bt = BeliefTracker(n_bands=4, p_stay_occ=0.9, p_stay_idle=0.85)
     m  = PeriodicInterceptModule(n_bands=4)
@@ -259,7 +259,7 @@ def test_module_c_isolation_from_belief_tracker():
 
 def test_module_c_does_not_affect_wiql_scheduler():
     """Running PeriodicInterceptModule does not alter WIQLScheduler Q-tables."""
-    from ew_smart_scan.env.wiql_ucb import WIQLScheduler
+    from src.scheduler.wiql_ucb import WIQLScheduler
 
     sched = WIQLScheduler(n_bands=4, k_scan=2)
     m = PeriodicInterceptModule(n_bands=4)
@@ -292,10 +292,10 @@ def _run_periodic_episode(n_steps: int, seed: int, use_whittle: bool = True):
     Misses (no scan of the periodic band) are captured by intercept_rate, not
     blended into the time error average.
     """
-    from ew_smart_scan.env.rf_environment import RFEnvironment
-    from ew_smart_scan.env.belief_tracker import BeliefTracker
-    from ew_smart_scan.env.receiver_model import ReceiverModel
-    from ew_smart_scan.eval.evaluation import EvaluationHarness
+    from src.environment.simulator import RFEnvironment
+    from src.scheduler.belief import BeliefTracker
+    from src.environment.receiver import ReceiverModel
+    from src.evaluation.harness import EvaluationHarness
 
     T_us  = 500.0
     sigma = 20.0

@@ -1,0 +1,8 @@
+{
+  "sensitivity_threshold_db": -5,
+  "operating_threshold_db": 8.41,
+  "snr_model": "sigmoid((emitter_snr - threshold_dB)/3.0)",
+  "emitter_snr_range_db": "uniform(5, 25) per emitter",
+  "N": 30,
+  "T": 5000
+}

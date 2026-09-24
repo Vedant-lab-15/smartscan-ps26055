@@ -1,34 +1,55 @@
 [project]
-name = "ew-smart-scan"
+name = "smartscan-ps26055"
 version = "0.1.0"
-description = "EW Smart Scan Strategy — SIH 2026, PS 26055 (DRDO)"
+description = "Whittle-inspired priority scheduler for Electronic Support receivers — SIH 2026 PS 26055 (DRDO)"
+readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.11"
+keywords = [
+    "electronic-warfare",
+    "restless-bandit",
+    "whittle-index",
+    "spectrum-sensing",
+    "reinforcement-learning",
+    "pomdp",
+    "sih-2026",
+    "drdo",
+]
 dependencies = [
-    "numpy==1.26.4",
-    "h5py==3.11.0",
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "h5py>=3.11",
     # NOTE: torch is NOT listed here — install it separately (CPU-only):
     #   pip install torch==2.3.1 --index-url https://download.pytorch.org/whl/cpu
     # See requirements-torch.txt for the pinned version.
     #
     # NOTE: turing-deinterleaving-challenge is a git-only package — install with:
     #   pip install git+https://github.com/alan-turing-institute/turing-deinterleaving-challenge.git
-    # Do NOT add it here because pip cannot resolve git-only packages as pinned deps.
 ]
 
 [project.optional-dependencies]
 dev = [
-    "hypothesis==6.112.2",
-    "pytest==8.2.2",
-    "matplotlib==3.9.1",
+    "hypothesis>=6.0",
+    "pytest>=7.4",
+    "matplotlib>=3.7",
+    "pandas>=2.0",
     "streamlit>=1.30",
     "plotly>=5.0",
+    "scikit-learn>=1.3",
 ]
 # Install for downloading TSRD data from HuggingFace Hub:
-#   pip install "ew-smart-scan[data]"
+#   pip install "smartscan-ps26055[data]"
 data = [
-    "huggingface_hub==0.24.6",
+    "huggingface_hub>=0.24",
 ]
+
+[project.urls]
+Repository = "https://github.com/coding-saints/smartscan-ps26055"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.backends.legacy:build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"

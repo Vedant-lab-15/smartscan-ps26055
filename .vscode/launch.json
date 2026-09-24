@@ -1,0 +1,59 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Dashboard (Streamlit)",
+            "type": "python",
+            "request": "launch",
+            "module": "streamlit",
+            "args": [
+                "run",
+                "dashboard/app.py"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Run Smoke Test",
+            "type": "python",
+            "request": "launch",
+            "module": "scripts.smoke_test",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Run Real-Data Evaluation",
+            "type": "python",
+            "request": "launch",
+            "module": "scripts.run_real_data_evaluation",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Run All Tests (pytest)",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests/",
+                "-v"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Debug Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

@@ -8,7 +8,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from ew_smart_scan.models.pulse import Pulse, pulse_from_str, pulse_to_str, validate_pulse
+from src.environment.pulse import Pulse, pulse_from_str, pulse_to_str, validate_pulse
 
 
 # ---------------------------------------------------------------------------
@@ -75,7 +75,7 @@ def test_validate_pulse_invalid_emitter():
 # ---------------------------------------------------------------------------
 # PDWGenerator unit tests (task 2.6)
 # ---------------------------------------------------------------------------
-from ew_smart_scan.models.pdw_generator import PDWGenerator
+from src.environment.pdw_generator import PDWGenerator
 
 
 def test_pdw_generator_pulses_valid():
@@ -126,8 +126,8 @@ def test_pdw_generator_toa_monotonic():
 # ---------------------------------------------------------------------------
 # TSRDLoader unit tests (task 2.6)
 # ---------------------------------------------------------------------------
-from ew_smart_scan.models.tsrd_loader import TSRDLoader
-from ew_smart_scan.env.errors import MemoryGuardError
+from src.environment.tsrd_loader import TSRDLoader
+from src.errors import MemoryGuardError
 
 
 def test_tsrd_loader_memory_guard_raises():
@@ -205,7 +205,7 @@ def _make_mock_h5(tmp_path, filename="test.h5"):
 def test_pulse_train_loader_iter_pulses_with_mock(tmp_path):
     """PulseTrainLoader.iter_pulses yields valid Pulses from a mocked PulseTrain."""
     import sys, types, numpy as np
-    from ew_smart_scan.models.pulse import validate_pulse
+    from src.environment.pulse import validate_pulse
 
     # Build a minimal fake turing_deinterleaving_challenge module
     fake_module = types.ModuleType("turing_deinterleaving_challenge")
@@ -236,9 +236,9 @@ def test_pulse_train_loader_iter_pulses_with_mock(tmp_path):
 
     try:
         from importlib import reload
-        import ew_smart_scan.models.pulse_train_loader as ptl
+        import src.environment.pulse_train_loader as ptl
         reload(ptl)
-        from ew_smart_scan.models.pulse_train_loader import PulseTrainLoader
+        from src.environment.pulse_train_loader import PulseTrainLoader
 
         loader = PulseTrainLoader(
             h5_paths=[tmp_path / "fake.h5"],
@@ -280,9 +280,9 @@ def test_pulse_train_loader_emitter_namespacing(tmp_path):
 
     try:
         from importlib import reload
-        import ew_smart_scan.models.pulse_train_loader as ptl
+        import src.environment.pulse_train_loader as ptl
         reload(ptl)
-        from ew_smart_scan.models.pulse_train_loader import PulseTrainLoader
+        from src.environment.pulse_train_loader import PulseTrainLoader
 
         loader = PulseTrainLoader([tmp_path / "a.h5", tmp_path / "b.h5"])
         loader._estimate_pulse_count = lambda path: n
@@ -302,7 +302,7 @@ def test_pulse_train_loader_emitter_namespacing(tmp_path):
 def test_pulse_train_loader_memory_guard(tmp_path):
     """PulseTrainLoader.initialize() raises MemoryGuardError when over limit."""
     import sys, types
-    from ew_smart_scan.env.errors import MemoryGuardError
+    from src.errors import MemoryGuardError
 
     fake_module = types.ModuleType("turing_deinterleaving_challenge")
 
@@ -321,9 +321,9 @@ def test_pulse_train_loader_memory_guard(tmp_path):
 
     try:
         from importlib import reload
-        import ew_smart_scan.models.pulse_train_loader as ptl
+        import src.environment.pulse_train_loader as ptl
         reload(ptl)
-        from ew_smart_scan.models.pulse_train_loader import PulseTrainLoader
+        from src.environment.pulse_train_loader import PulseTrainLoader
 
         loader = PulseTrainLoader(
             [tmp_path / "big.h5"],
@@ -337,8 +337,8 @@ def test_pulse_train_loader_memory_guard(tmp_path):
 
 def test_credential_error_no_hf_token(monkeypatch):
     """download_tsrd raises CredentialError when HF_TOKEN is not set."""
-    from ew_smart_scan.env.errors import CredentialError
-    from ew_smart_scan.data_download import download_tsrd
+    from src.errors import CredentialError
+    from src.data_download import download_tsrd
 
     monkeypatch.delenv("HF_TOKEN", raising=False)
     with pytest.raises(CredentialError, match="HF_TOKEN"):
@@ -348,9 +348,9 @@ def test_credential_error_no_hf_token(monkeypatch):
 def test_pulse_train_loader_plugs_into_rf_env(tmp_path):
     """PulseTrainLoader plugs into RFEnvironment as a drop-in for TSRDLoader."""
     import sys, types, numpy as np
-    from ew_smart_scan.env.rf_environment import RFEnvironment
-    from ew_smart_scan.env.belief_tracker import BeliefTracker
-    from ew_smart_scan.env.receiver_model import ReceiverModel
+    from src.environment.simulator import RFEnvironment
+    from src.scheduler.belief import BeliefTracker
+    from src.environment.receiver import ReceiverModel
 
     n_pulses = 30
     n_bands = 4
@@ -386,9 +386,9 @@ def test_pulse_train_loader_plugs_into_rf_env(tmp_path):
 
     try:
         from importlib import reload
-        import ew_smart_scan.models.pulse_train_loader as ptl
+        import src.environment.pulse_train_loader as ptl
         reload(ptl)
-        from ew_smart_scan.models.pulse_train_loader import PulseTrainLoader
+        from src.environment.pulse_train_loader import PulseTrainLoader
 
         loader = PulseTrainLoader(
             [tmp_path / "scan_000.h5"],
@@ -439,8 +439,8 @@ def test_real_tsrd_scan_file_if_available():
     NOT strictly increasing (multiple emitters can share the same ToA value).
     The loader handles this correctly; we do not assert strict monotonicity here.
     """
-    from ew_smart_scan.models.tsrd_loader import TSRDLoader
-    from ew_smart_scan.models.pulse import validate_pulse
+    from src.environment.tsrd_loader import TSRDLoader
+    from src.environment.pulse import validate_pulse
 
     data_dir = pathlib.Path("data/tsrd_sample")
     scan_files = sorted(data_dir.rglob("*.h5"))

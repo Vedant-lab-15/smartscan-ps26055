@@ -15,13 +15,13 @@ import time
 import h5py
 import numpy as np
 
-from ew_smart_scan.models.tsrd_loader import TSRDLoader
-from ew_smart_scan.env.rf_environment import RFEnvironment
-from ew_smart_scan.env.belief_tracker import BeliefTracker
-from ew_smart_scan.env.receiver_model import ReceiverModel
-from ew_smart_scan.env.wiql_ucb import WIQLScheduler, ACTION_SCAN, ACTION_PASSIVE
-from ew_smart_scan.env.periodic_intercept import PeriodicInterceptModule
-from ew_smart_scan.eval.evaluation import EvaluationHarness
+from src.environment.tsrd_loader import TSRDLoader
+from src.environment.simulator import RFEnvironment
+from src.scheduler.belief import BeliefTracker
+from src.environment.receiver import ReceiverModel
+from src.scheduler.wiql_ucb import WIQLScheduler, ACTION_SCAN, ACTION_PASSIVE
+from src.scheduler.periodic import PeriodicInterceptModule
+from src.evaluation.harness import EvaluationHarness
 
 SAMPLE_DIR = pathlib.Path("data/tsrd_sample/scan/train_scan")
 N_BANDS    = 18

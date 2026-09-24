@@ -2,9 +2,9 @@
 import numpy as np
 import pytest
 
-from ew_smart_scan.env.errors import CrossFileEmitterError, MemoryGuardError
-from ew_smart_scan.env.rf_environment import RFEnvironment
-from ew_smart_scan.models.pdw_generator import PDWGenerator
+from src.errors import CrossFileEmitterError, MemoryGuardError
+from src.environment.simulator import RFEnvironment
+from src.environment.pdw_generator import PDWGenerator
 
 
 # ---------------------------------------------------------------------------
@@ -77,7 +77,7 @@ def test_rf_env_cross_file_emitter_passes():
 def test_rf_env_memory_guard_via_tsrd_loader():
     """MemoryGuardError is raised via TSRDLoader.initialize() before any data is read."""
     import pathlib
-    from ew_smart_scan.models.tsrd_loader import TSRDLoader
+    from src.environment.tsrd_loader import TSRDLoader
 
     loader = TSRDLoader(h5_paths=[pathlib.Path("fake.h5")], memory_guard_max=100)
     loader._estimate_pulse_count = lambda path: 999_999  # way over the guard
@@ -96,7 +96,7 @@ def test_rf_env_belief_tracker_state_independence():
     """Calling get_true_state never mutates BeliefTracker state (foreshadows Property 4)."""
     # We just verify that importing and using both without cross-contamination works.
     # Full state-isolation property is tested in task 4.
-    from ew_smart_scan.env.belief_tracker import BeliefTracker  # will exist after task 4
+    from src.scheduler.belief import BeliefTracker  # will exist after task 4
     _, env = make_gen_and_env(n_bands=4)
     try:
         bt = BeliefTracker(n_bands=4, p_stay_occ=0.9, p_stay_idle=0.85)
@@ -115,7 +115,7 @@ def test_rf_env_belief_tracker_state_independence():
 # ---------------------------------------------------------------------------
 from hypothesis import given, settings
 from hypothesis import strategies as st
-from ew_smart_scan.env.belief_tracker import BeliefTracker
+from src.scheduler.belief import BeliefTracker
 
 
 @given(
@@ -207,7 +207,7 @@ def test_belief_tracker_constructor_validation():
 # ---------------------------------------------------------------------------
 # Task 5.2: ReceiverModel — POMDP gating tests
 # ---------------------------------------------------------------------------
-from ew_smart_scan.env.receiver_model import ReceiverModel
+from src.environment.receiver import ReceiverModel
 
 
 def _make_receiver(n_bands: int = 4, k_scan: int = 2, p_emit: float = 0.5, seed: int = 42):
@@ -331,7 +331,7 @@ def test_smoke_round_robin():
 # Task 7.2: Property Test — Action Cardinality (Property 3)
 # **Validates: Requirements 1.2, 1.3**
 # ---------------------------------------------------------------------------
-from ew_smart_scan.env.wiql_ucb import WIQLScheduler, ACTION_PASSIVE, ACTION_SCAN
+from src.scheduler.wiql_ucb import WIQLScheduler, ACTION_PASSIVE, ACTION_SCAN
 
 
 @given(

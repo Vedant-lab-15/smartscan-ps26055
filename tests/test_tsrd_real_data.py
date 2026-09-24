@@ -64,8 +64,8 @@ def test_tsrd_loader_reads_real_files(sample_h5_files, tmp_path):
     This test reveals whether the original key-name assumptions in TSRDLoader
     match the actual HDF5 structure. Pass/fail + warnings are reported clearly.
     """
-    from ew_smart_scan.models.tsrd_loader import TSRDLoader
-    from ew_smart_scan.models.pulse import validate_pulse
+    from src.environment.tsrd_loader import TSRDLoader
+    from src.environment.pulse import validate_pulse
     import h5py
 
     # First: inspect the raw HDF5 structure of one file so we can report it
@@ -118,7 +118,7 @@ def test_tsrd_loader_reads_real_files(sample_h5_files, tmp_path):
             f"  Issue: {tsrd_loader_issue}\n"
             f"  FIX NEEDED: The real .h5 files likely use a different internal\n"
             f"  structure than the named-key assumption (ToA/CF/PW/AoA/Amplitude).\n"
-            f"  Use PulseTrainLoader (ew_smart_scan/models/pulse_train_loader.py)\n"
+            f"  Use PulseTrainLoader (src/environment/pulse_train_loader.py)\n"
             f"  which uses the official PulseTrain.load() API instead."
         )
         pytest.fail(
@@ -133,9 +133,9 @@ def test_tsrd_loader_reads_real_files(sample_h5_files, tmp_path):
 
 def test_pdw_schema_matches_pdwgenerator(sample_h5_files):
     """Pulses from real files use the same Pulse dataclass as PDWGenerator."""
-    from ew_smart_scan.models.tsrd_loader import TSRDLoader
-    from ew_smart_scan.models.pdw_generator import PDWGenerator
-    from ew_smart_scan.models.pulse import Pulse
+    from src.environment.tsrd_loader import TSRDLoader
+    from src.environment.pdw_generator import PDWGenerator
+    from src.environment.pulse import Pulse
 
     # Load a few pulses from a real file
     path = sample_h5_files[0]
@@ -196,7 +196,7 @@ def test_toa_monotonic_per_file(sample_h5_files):
     We assert non-decreasing (no backward jumps), not strictly increasing.
     Tie counts are printed for information.
     """
-    from ew_smart_scan.models.tsrd_loader import TSRDLoader
+    from src.environment.tsrd_loader import TSRDLoader
 
     loader = TSRDLoader(sample_h5_files, memory_guard_max=50_000_000)
     loader.initialize()
@@ -241,7 +241,7 @@ def test_emitter_labels_isolated_across_files(sample_h5_files):
       arbitrary per file)
     - Namespaced labels (label * 1000 + file_id): must NOT collide
     """
-    from ew_smart_scan.models.tsrd_loader import TSRDLoader
+    from src.environment.tsrd_loader import TSRDLoader
 
     loader = TSRDLoader(sample_h5_files, memory_guard_max=10_000_000)
     loader.initialize()
@@ -305,10 +305,10 @@ def test_real_files_feed_into_rf_environment(sample_h5_files):
     Uses 18 bands of 1 GHz each (covering 0–18 GHz) matching real TSRD CF range.
     Real TSRD CF range confirmed: ~5–12000 MHz across the 3 sample files.
     """
-    from ew_smart_scan.models.tsrd_loader import TSRDLoader
-    from ew_smart_scan.env.rf_environment import RFEnvironment
-    from ew_smart_scan.env.belief_tracker import BeliefTracker
-    from ew_smart_scan.env.receiver_model import ReceiverModel
+    from src.environment.tsrd_loader import TSRDLoader
+    from src.environment.simulator import RFEnvironment
+    from src.scheduler.belief import BeliefTracker
+    from src.environment.receiver import ReceiverModel
 
     # Use only 1 file for speed
     path = sample_h5_files[0]
