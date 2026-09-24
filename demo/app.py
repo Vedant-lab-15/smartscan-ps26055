@@ -15,8 +15,19 @@ import pathlib
 import numpy as np
 import streamlit as st
 
-# ── ensure project root on path (works locally and on HF Spaces) ─────────────
-_ROOT = pathlib.Path(__file__).resolve().parent.parent
+# ── ensure project root on path (works locally, on HF Spaces, and from demo/) ─
+_HERE = pathlib.Path(__file__).resolve().parent
+# Support three layouts:
+#   1. Local: demo/app.py  → parent = demo/, parent.parent = repo root
+#   2. HF Space: app.py at root → parent = root (src/ is sibling)
+#   3. HF Space: demo/app.py   → parent = demo/, parent.parent = root
+for candidate in [_HERE, _HERE.parent, _HERE.parent.parent]:
+    if (candidate / "src").is_dir():
+        _ROOT = candidate
+        break
+else:
+    _ROOT = _HERE
+
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
