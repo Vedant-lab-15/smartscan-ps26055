@@ -260,6 +260,10 @@ else:
 
     # ── Headline metrics ──────────────────────────────────────────────────────
     st.markdown("### 📊 Episode Results")
+    st.caption(
+        f"Single-seed demo run · {t_steps} steps · "
+        "Paper results: N=30 seeds, 5000 steps — see `results/headline_numbers.json`"
+    )
     m1, m2, m3, m4 = st.columns(4)
 
     with m1:
@@ -445,7 +449,12 @@ else:
     roll_df = roll_df.iloc[::step_every]
     st.line_chart(roll_df, use_container_width=True, height=200,
                   color=["#3fb950", "#8b949e"])
-    st.caption("20-step rolling average reward per step. Positive spikes = successful intercepts.")
+    st.caption(
+        "20-step rolling average reward per step. Positive spikes = successful intercepts. "
+        "Demo runs at reduced episode length for responsiveness — see "
+        "[results/headline_numbers.json](https://github.com/Vedant-lab-15/smartscan-ps26055/blob/main/results/headline_numbers.json) "
+        "for full N=30 seed results."
+    )
 
     # ── Periodic emitter callout ──────────────────────────────────────────────
     if scenario.startswith("Periodic"):
