@@ -97,12 +97,29 @@ class WIQLPolicy:
     """
     PERIODIC_GAMMA = 1.0  # tunable weight for the periodic bonus
 
-    def __init__(self, n_bands: int, k: int, use_periodic_bias: bool = True):
+    def __init__(self, n_bands: int, k: int, use_periodic_bias: bool = True,
+                 c_ucb: float = 1.0, epsilon_explore: float = 0.01,
+                 periodic_gamma: float = 1.0, rr_warmup_steps: int = 50,
+                 prior: float = 0.5, p_stay_occ: float = 0.9,
+                 p_stay_idle: float = 0.85, p_detect: float = 0.9,
+                 p_fa: float = 0.01):
         self.n_bands = n_bands
         self.k = k
         self.use_periodic_bias = use_periodic_bias
-        self.bt = BeliefTracker(n_bands=n_bands, p_stay_occ=0.9, p_stay_idle=0.85)
-        self.sched = WIQLScheduler(n_bands=n_bands, k_scan=k)
+        self.periodic_gamma = periodic_gamma
+        self.rr_warmup_steps = rr_warmup_steps
+        self._c_ucb = c_ucb
+        self._epsilon = epsilon_explore
+        self._prior = prior
+        self._p_stay_occ = p_stay_occ
+        self._p_stay_idle = p_stay_idle
+        self._p_detect = p_detect
+        self._p_fa = p_fa
+        self.bt = BeliefTracker(n_bands=n_bands, p_stay_occ=p_stay_occ,
+                                p_stay_idle=p_stay_idle, prior=prior,
+                                p_detect=p_detect, p_fa=p_fa)
+        self.sched = WIQLScheduler(n_bands=n_bands, k_scan=k,
+                                   c_ucb=c_ucb, epsilon_explore=epsilon_explore)
         # K-aware sigma for Gaussian bonus width
         k_aware_dwell_half = min(3.0, 6.0 / k)
         self.pmod = (PeriodicInterceptModule(n_bands=n_bands,
@@ -111,8 +128,12 @@ class WIQLPolicy:
         self._prev_belief: np.ndarray | None = None
 
     def reset(self):
-        self.bt = BeliefTracker(self.n_bands, p_stay_occ=0.9, p_stay_idle=0.85)
-        self.sched = WIQLScheduler(self.n_bands, k_scan=self.k)
+        self.bt = BeliefTracker(self.n_bands, p_stay_occ=self._p_stay_occ,
+                                p_stay_idle=self._p_stay_idle, prior=self._prior,
+                                p_detect=self._p_detect, p_fa=self._p_fa)
+        self.sched = WIQLScheduler(self.n_bands, k_scan=self.k,
+                                   c_ucb=self._c_ucb,
+                                   epsilon_explore=self._epsilon)
         k_aware_dwell_half = min(3.0, 6.0 / self.k)
         self.pmod = (PeriodicInterceptModule(self.n_bands,
                                               dwell_half_sigma=k_aware_dwell_half)
@@ -143,30 +164,18 @@ class WIQLPolicy:
         belief = self.bt.get_all()
         self._prev_belief = belief.copy()
 
-        # ── Round-robin pre-phase (first 50 steps) ────────────────────────────
-        # Guarantees ≥1 visit to every band before WIQL takes over.
-        # Diagnosis: convergence failure in 9/30 seeds was caused by UCB
-        # cold-start never visiting the periodic emitter's band in the first
-        # 50 steps (avg 2.4 early scans in non-converging seeds vs 27.5 in
-        # converging seeds). 50 steps = ceil(8/3)*3 = ~3 full passes over all
-        # bands, sufficient to seed the periodic estimator.
-        # 200-step warmup over-corrects: it disrupts seeds where the periodic
-        # band is band 0 (naturally first-visited by WIQL ascending tie-break).
-        # Result after fix: 30/30 seeds converge (up from 21/30 baseline).
-        RR_WARMUP_STEPS = 50
-        if t < RR_WARMUP_STEPS:
+        # ── Round-robin pre-phase (configurable warmup steps) ─────────────────
+        if t < self.rr_warmup_steps:
             cursor = (t * self.k) % self.n_bands
             return {(cursor + j) % self.n_bands for j in range(self.k)}
 
         # ── WIQL + periodic additive index (after warmup) ─────────────────────
-        # Get raw WIQL indices (includes UCB bonus internally)
         wiql_indices = self.sched.compute_indices(belief)
 
         if self.pmod is not None:
             t_now_us = t * dt_us
-            # Additive periodic bonus — no threshold bypass, no band exclusion
             bonuses = np.array([
-                self.PERIODIC_GAMMA * self._periodic_bonus(b, t_now_us)
+                self.periodic_gamma * self._periodic_bonus(b, t_now_us)
                 for b in range(self.n_bands)
             ], dtype=np.float64)
             combined = wiql_indices + bonuses
