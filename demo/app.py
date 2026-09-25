@@ -37,7 +37,7 @@ st.set_page_config(
     page_title="Smart Scan · PS 26055",
     page_icon="📡",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="expanded",  # always open — never auto-collapse
 )
 
 # ── matplotlib global style (applied before any figure is created) ────────────
@@ -80,6 +80,20 @@ code, pre, .mono {
 footer                              { visibility: hidden; }
 #MainMenu                           { visibility: hidden; }
 header [data-testid="stToolbar"]    { display: none; }
+
+/* Force sidebar always visible — never auto-collapse on narrow viewports.
+   The collapse button is still present but hidden by toolbarMode=minimal;
+   this ensures the sidebar panel itself is always shown. */
+[data-testid="stSidebar"] {
+    display: block !important;
+    visibility: visible !important;
+    min-width: 18rem !important;
+    width: 22rem !important;
+    transform: none !important;
+    opacity: 1 !important;
+}
+[data-testid="stSidebarCollapsedControl"] { display: none !important; }
+section[data-testid="stSidebarContent"]   { display: block !important; }
 
 /* Tighten top padding */
 .block-container { padding-top: 0 !important; }
