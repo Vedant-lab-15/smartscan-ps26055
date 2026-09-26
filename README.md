@@ -34,7 +34,7 @@ Where ε = 0.01 is a minimum exploration floor that prevents permanent lockout o
 ## Quick Start
 
 ```bash
-git clone https://github.com/coding-saints/smartscan-ps26055.git
+git clone https://github.com/Vedant-lab-15/smartscan-ps26055.git
 cd smartscan-ps26055
 pip install -r requirements.txt
 pytest tests/
@@ -58,7 +58,7 @@ This runs the full N=30-seed harness across the three scenarios (background, per
 streamlit run demo/app.py
 ```
 
-(A deployed version is available at [Streamlit Community Cloud — fill in after deployment])
+(A deployed interactive prototype is available at [smartscan-ps26055.streamlit.app](https://smartscan-ps26055-eedhs42fmrbm5or5uragaw.streamlit.app/))
 
 ---
 
@@ -84,7 +84,7 @@ smartscan-ps26055/
 │   ├── environment/        # RFEnvironment, ReceiverModel, PDWGenerator, TSRDLoader
 │   ├── evaluation/         # EvaluationHarness (7 FoMs), statistical harness, outputs
 │   └── baselines/          # RoundRobinPolicy, RandomPolicy
-├── demo/                   # Streamlit live demo (2 tabs, dark theme)
+├── demo/                   # Interactive prototype — scenario editor, scheduler config, baseline selector
 ├── tests/                  # 134 tests — unit, property-based, integration
 ├── scripts/                # run_evaluation.sh, generate_figures.py
 ├── docs/                   # Architecture, evaluation methodology, limitations, deployment
@@ -100,11 +100,11 @@ smartscan-ps26055/
 **Built and validated:**
 - Core WIQL-UCB scheduler (tabular, ~320 bytes/arm, ~24 μs/step at K=8)
 - Belief-state update with realistic Pd=0.9, Pfa=0.01 (HMM POMDP)
-- Periodic recurrence module — standalone (0.975 ± 0.006) and multi-band integration (γ=5 gives +0.142, p=0.0011)
+- Periodic recurrence module — standalone (0.975 ± 0.006) and multi-band convergence 30/30 seeds with 50-step RR pre-phase (worst-case 0.419); γ=5 gives +0.142 over γ=0, p=0.0011
 - Statistical evaluation harness (N=30 seeds, 95% bootstrap CI, Wilcoxon signed-rank)
 - Frequency-agile handling via UCB de-prioritization (+0.107 min across hop-rate sweep)
 - UCB non-stationarity fix (exploration floor ε=0.01)
-- Live Streamlit demo dashboard
+- Interactive prototype deployed at [smartscan-ps26055.streamlit.app](https://smartscan-ps26055-eedhs42fmrbm5or5uragaw.streamlit.app/) — scenario editor, scheduler config panel, baseline selector
 
 **Roadmap:**
 - Frequency-agile correlated-transition modeling (P ∈ ℝ^{K×K})
@@ -117,7 +117,7 @@ smartscan-ps26055/
 ## Limitations
 
 - Indexability of the priority index is unverified; labeled "Whittle-inspired heuristic."
-- Sensitivity (minimum SNR for Pd ≥ 0.90) not measured in this evaluation.
+- Sensitivity: −1 dB receiver threshold (minimum SNR at which Pd ≥ 0.90 with 95% CI, N=30 seeds).
 - Frequency-agile handling is reactive, not predictive of cross-band hops.
 - Multi-band periodic convergence required a 50-step round-robin discovery pre-phase to reach 30/30 seeds (8-band, K=3 harness); 30/30 also in standalone K=2 configuration.
 
@@ -134,7 +134,7 @@ If you use this code, please cite the work in `CITATION.cff`.
   title  = {Smart Scan Strategy for Electronic Warfare — SIH 2026, PS 26055},
   author = {Coding Saints, Team ID 120303},
   year   = {2026},
-  url    = {https://github.com/coding-saints/smartscan-ps26055}
+  url    = {https://github.com/Vedant-lab-15/smartscan-ps26055}
 }
 ```
 
