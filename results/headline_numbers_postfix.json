@@ -376,5 +376,14 @@
         "N": 30
       }
     ]
+  },
+  "standalone_periodic_warmup0": {
+    "mean": 0.6431,
+    "ci_lo": 0.5758,
+    "ci_hi": 0.7113,
+    "worst": 0.2194,
+    "N": 30,
+    "config": "K=2, 4 bands, T=5000, warmup=0 (no RR pre-phase)",
+    "note": "warmup=0 is correct for K=2/4-bands \u2014 standalone already converges without pre-phase"
   }
 }
