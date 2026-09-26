@@ -12,9 +12,12 @@ A Whittle-inspired priority scheduler for Electronic Support (ES) receivers oper
 | Result | Value | Significance |
 |---|---|---|
 | Core scheduler vs. round-robin (3 scenarios) | +0.14 to +0.20 intercept rate | N=30, p<0.001 |
+| Core scheduler vs. random (3 scenarios) | +0.14 to +0.20 intercept rate | N=30 (Random ≈ RR) |
+| Core scheduler vs. Clarkson (periodic) | +0.193 intercept rate | N=30; Clarkson=0.318, WIQL=0.511 |
 | Periodic module, standalone | 0.975 ± 0.006 intercept rate | worst-case 0.939 |
 | Multi-band convergence (8-band, K=3) | 30/30 seeds, worst-case 0.419 | 50-step RR pre-phase fix |
 | Frequency-agile handling | +0.107 min across sensitivity sweep | p<0.001, all configs |
+| Sensitivity | −1 dB receiver threshold | Pd ≥ 0.90, 95% CI, N=30 |
 
 ---
 
@@ -83,7 +86,7 @@ smartscan-ps26055/
 │   ├── scheduler/          # WIQLScheduler, BeliefTracker, PeriodicInterceptModule
 │   ├── environment/        # RFEnvironment, ReceiverModel, PDWGenerator, TSRDLoader
 │   ├── evaluation/         # EvaluationHarness (7 FoMs), statistical harness, outputs
-│   └── baselines/          # RoundRobinPolicy, RandomPolicy
+│   └── baselines/          # RoundRobinPolicy, RandomPolicy, ClarksonPolicy
 ├── demo/                   # Interactive prototype — scenario editor, scheduler config, baseline selector
 ├── tests/                  # 134 tests — unit, property-based, integration
 ├── scripts/                # run_evaluation.sh, generate_figures.py
