@@ -42,8 +42,13 @@ results/figures/*.png
 results/figures/*.pdf
 !results/figures/.gitkeep
 
-# Keep headline numbers (source of truth for paper)
-!results/headline_numbers.json
+# Archive — preserved locally but not tracked
+# (uncomment to untrack archive if it gets too large)
+# results/archive/
+
+# Keep paper results and controlled demonstrations
+!results/paper_results/
+!results/controlled_demonstrations/
 
 # HuggingFace download cache
 .cache/
