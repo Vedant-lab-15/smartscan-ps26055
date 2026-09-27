@@ -42,9 +42,9 @@ results/figures/*.png
 results/figures/*.pdf
 !results/figures/.gitkeep
 
-# Archive — preserved locally but not tracked
-# (uncomment to untrack archive if it gets too large)
-# results/archive/
+# Archive — stale/superseded results kept locally but NOT on GitHub
+# A judge browsing the repo should only see paper_results/ and controlled_demonstrations/
+results/archive/
 
 # Keep paper results and controlled demonstrations
 !results/paper_results/
